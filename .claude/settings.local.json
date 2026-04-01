@@ -6,7 +6,14 @@
       "Bash(claude skill:*)",
       "Bash(pip3 --version)",
       "Bash(pip3 install:*)",
-      "Bash(git remote:*)"
+      "Bash(git remote:*)",
+      "Bash(npx skills:*)",
+      "Bash(gh repo:*)",
+      "Bash(gh api:*)",
+      "Bash(git mv:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)"
     ]
   }
 }

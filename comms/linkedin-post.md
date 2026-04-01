@@ -24,7 +24,7 @@ I ran a 60-case benchmark across bug fixes, refactors, schema changes, and archi
 
 The gap that surprised me: baseline catches the obvious crash almost every time. It almost never catches the silent edge case, the pattern break, or the security implication. And it never predicts what you're about to ask.
 
-The skill is live. The benchmark is open. The methodology doc covers what we tested, how we tested it without an API key, and the honest limitations of the approach.
+The skill is live. Install it with `npx skills add tombrewsviews/foresight-skill`. The benchmark is open. The methodology doc covers what we tested, how we tested it without an API key, and the honest limitations of the approach.
 
 If you're building with Claude Code, this is worth trying. An agent that looks forward after writing code is a fundamentally different tool.
 

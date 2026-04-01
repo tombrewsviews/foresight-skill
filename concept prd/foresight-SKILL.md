@@ -37,7 +37,7 @@ Append this block at the end of your normal response. Keep it under 120 words to
 🔴 Will break:     [1-2 things that will fail imminently — specific, not vague]
 🟡 Watch out for:  [1-2 edge cases or silent regressions introduced]
 🔁 Broken pattern: [1 architectural/naming/pattern inconsistency created]
-➡️  Next prompt:   [what the user is likely to ask next, in one line]
+➡️  Next prompt: [what the user is likely to ask next, in one line]
 ---
 ```
 
@@ -99,7 +99,7 @@ Ask yourself:
 🔴 Will break:     `useSessionStore` still imports old `SessionState` type — TS error on next build
 🟡 Watch out for:  Empty `meals` array will hit `.reduce()` with no initialValue → runtime throw
 🔁 Broken pattern: `logFood()` uses local error toast; all other tools use the global `ErrorBoundary`
-➡️  Next prompt:   "The nutrition total isn't updating after I log a meal"
+➡️  Next prompt: "The nutrition total isn't updating after I log a meal"
 ---
 ```
 

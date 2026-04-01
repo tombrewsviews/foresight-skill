@@ -46,7 +46,7 @@ Append this block at the end of your normal response. Keep it under 120 words to
 🟡 Watch out for:  [1-2 edge cases or silent regressions introduced]
 🔒 Security:       [1 auth, injection, exposure, or secrets issue introduced]
 🔁 Broken pattern: [1 architectural/naming/pattern inconsistency created]
-➡️  Next prompt:   [what the user is likely to ask next, in one line]
+➡️  Thinking ahead: [what the user is likely to ask next, in one line]
 ---
 ```
 
@@ -113,7 +113,7 @@ Ask yourself:
 - Did I skip error handling that all similar functions have?
 - Did I create a one-off approach where a shared abstraction already exists?
 
-### ➡️ Next prompt (predict the user's follow-up)
+### ➡️ Thinking ahead (predict the user's follow-up)
 
 This is the most underrated line. A good prediction shows you understand the user's workflow, not just the code. Ground it in what the user is actually building — not a generic "test the changes."
 
@@ -144,7 +144,7 @@ Ask yourself:
 🟡 Watch out for:  Empty `meals` array hits `.reduce()` with no initialValue → runtime throw
 🔒 Security:       `getMealHistory` endpoint has no auth guard — returns any user's data with a changed `userId` param
 🔁 Broken pattern: `logFood()` uses local error toast; all other mutations use the global `ErrorBoundary`
-➡️  Next prompt:   "The nutrition total isn't updating after I log a meal"
+➡️  Thinking ahead: "The nutrition total isn't updating after I log a meal"
 ---
 ```
 
@@ -166,7 +166,7 @@ Ask yourself:
 (^ You already said this. The FORESIGHT block should add NEW information.)
 
 # Generic next-prompt — not grounded in the user's actual task
-➡️  Next prompt: "Can you add tests for this?"
+➡️  Thinking ahead: "Can you add tests for this?"
 (^ What will they ACTUALLY ask, given the feature they're building?)
 ```
 

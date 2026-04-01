@@ -12,7 +12,7 @@ After any code change (bug fix, feature, refactor, schema migration), Foresight 
 | 🟡 | **Watch out for** | Edge cases and silent regressions |
 | 🔒 | **Security** | Auth gaps, injection, data exposure, leaked secrets |
 | 🔁 | **Broken pattern** | Naming/architectural inconsistencies introduced |
-| ➡️ | **Next prompt** | Prediction of what the user will ask next |
+| ➡️ | **Thinking ahead** | Prediction of what the user will ask next |
 
 Maximum 120 words. Telegraphic language. Categories are omitted when nothing applies.
 
@@ -55,7 +55,11 @@ foresight/
 
 ### Install
 
-Copy `skill.md` into your Claude Code skills directory (or equivalent for your agent framework). The skill is triggered automatically at the end of any implementation turn — no explicit invocation needed.
+```bash
+npx skills add tombrewsviews/foresight-skill
+```
+
+Or copy `skill.md` into your Claude Code skills directory (or equivalent for your agent framework). The skill is triggered automatically at the end of any implementation turn — no explicit invocation needed.
 
 ### Output Format
 
@@ -65,7 +69,7 @@ Copy `skill.md` into your Claude Code skills directory (or equivalent for your a
 🟡 Watch out for: <edge case or silent regression>
 🔒 Security: <auth/injection/exposure issue if any>
 🔁 Broken pattern: <inconsistency introduced>
-➡️ Next prompt: "<predicted user follow-up>"
+➡️ Thinking ahead: "<predicted user follow-up>"
 ```
 
 Categories with nothing to report are omitted. Total word count stays under 120.
@@ -139,6 +143,6 @@ The skill adds ~35 words per case. The baseline misses ~2.4 issues per case, eac
 - Will break: ~85% (visible crashes are caught without structure)
 - Edge cases: ~10% (silent bugs mostly missed)
 - Broken pattern: ~5% (architectural drift rarely surfaced)
-- Next prompt: 0% (user follow-ups never predicted)
+- Thinking ahead: 0% (user follow-ups never predicted)
 
 See `benchmark-results/methodology.md` for evaluation approach and known limitations.

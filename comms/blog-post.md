@@ -64,6 +64,12 @@ The pattern it opens is worth noting: an agent that looks forward after every ch
 
 ---
 
-Foresight is available now. It installs as a standard Claude Code skill and activates automatically at the end of implementation turns.
+Foresight is available now. Install it with:
+
+```bash
+npx skills add tombrewsviews/foresight-skill
+```
+
+It installs as a standard Claude Code skill and activates automatically at the end of implementation turns.
 
 The code and benchmark are open.
