@@ -1,0 +1,22 @@
+{
+  "id": "case_E_003",
+  "stratum": "E",
+  "difficulty": "hard",
+  "language": "python",
+  "change_type": "architecture_shift",
+  "description": "Move validation from API layer to database layer loses API error messages",
+  "before_code": "# api/products.py\n@app.route('/products', methods=['POST'])\ndef create_product():\n    data = request.json\n    errors = {}\n    if not data.get('name'):\n        errors['name'] = 'Name is required'\n    if not isinstance(data.get('price'), (int, float)) or data['price'] < 0:\n        errors['price'] = 'Price must be a non-negative number'\n    if errors:\n        return jsonify({'errors': errors}), 422\n    product = product_service.create(data)\n    return jsonify(product), 201",
+  "after_code": "# models/product.py\nfrom sqlalchemy import CheckConstraint\n\nclass Product(Base):\n    __tablename__ = 'products'\n    id = Column(String, primary_key=True, default=lambda: str(uuid4()))\n    name = Column(String, nullable=False)\n    price = Column(Float, CheckConstraint('price >= 0'), nullable=False)\n\n# api/products.py\n@app.route('/products', methods=['POST'])\ndef create_product():\n    data = request.json\n    try:\n        product = product_service.create(data)\n        return jsonify(product), 201\n    except Exception as e:\n        return jsonify({'error': str(e)}), 422",
+  "diff_summary": "Moved product validation from API layer to database constraints, removed field-specific error messages",
+  "ground_truth": {
+    "will_break": [],
+    "edge_cases": [
+      "Missing name field sends null to DB \u2014 IntegrityError message from SQLAlchemy exposed directly to API consumers (leaks implementation details); no field-specific errors means frontend can't highlight which field is wrong"
+    ],
+    "broken_pattern": "DB constraint errors (IntegrityError) are not API errors \u2014 str(e) exposes raw SQLAlchemy/PostgreSQL error messages; API layer should translate DB errors to user-friendly messages",
+    "next_prompt": "The frontend form validation highlighting stopped working \u2014 we only get a generic error now",
+    "verified_by": "git_analogy",
+    "notes": "Moving validation to DB layer loses field-level error detail and exposes implementation"
+  },
+  "token_cost_manual_followup": 37
+}

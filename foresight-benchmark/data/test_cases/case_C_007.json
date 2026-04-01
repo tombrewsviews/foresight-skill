@@ -1,0 +1,22 @@
+{
+  "id": "case_C_007",
+  "stratum": "C",
+  "difficulty": "medium",
+  "language": "python",
+  "change_type": "refactor",
+  "description": "Extract log_event utility changes log level semantics",
+  "before_code": "# payment.py\nimport logging\nlogger = logging.getLogger(__name__)\n\ndef process_payment(amount: float, card_token: str):\n    logger.info(f\"Processing payment amount={amount}\")\n    if amount <= 0:\n        logger.error(f\"Invalid payment amount: {amount}\")\n        raise ValueError(\"Invalid amount\")\n    logger.info(f\"Payment processed successfully amount={amount}\")\n\n# auth.py\ndef login_attempt(user_id: str, success: bool):\n    if success:\n        logging.getLogger(__name__).info(f\"Login success user={user_id}\")\n    else:\n        logging.getLogger(__name__).warning(f\"Login failed user={user_id}\")",
+  "after_code": "# log_utils.py\nimport logging\n\ndef log_event(event: str, data: dict, level: str = 'info'):\n    logging.getLogger('app').info(f\"{event}: {data}\")\n\n# payment.py\nfrom log_utils import log_event\n\ndef process_payment(amount: float, card_token: str):\n    log_event(\"payment.start\", {\"amount\": amount})\n    if amount <= 0:\n        log_event(\"payment.invalid\", {\"amount\": amount}, level='error')\n        raise ValueError(\"Invalid amount\")\n    log_event(\"payment.success\", {\"amount\": amount})\n\n# auth.py\nfrom log_utils import log_event\n\ndef login_attempt(user_id: str, success: bool):\n    level = 'info' if success else 'warning'\n    log_event(\"login\", {\"user\": user_id, \"success\": success}, level=level)",
+  "diff_summary": "Extracted log_event utility with a level parameter, but the implementation ignores the level and always calls logging.info",
+  "ground_truth": {
+    "will_break": [],
+    "edge_cases": [
+      "Error and warning events now logged as INFO \u2014 alerting systems watching for ERROR/WARNING log levels won't trigger; failed logins silently downgraded to info"
+    ],
+    "broken_pattern": "level parameter accepted but ignored in implementation \u2014 interface promises level control but doesn't deliver it",
+    "next_prompt": "Our error alerting stopped firing \u2014 payment errors aren't showing as errors in the logs",
+    "verified_by": "git_analogy",
+    "notes": "Parameter accepted but not used \u2014 silent contract violation"
+  },
+  "token_cost_manual_followup": 36
+}

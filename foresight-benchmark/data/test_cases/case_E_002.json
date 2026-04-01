@@ -1,0 +1,22 @@
+{
+  "id": "case_E_002",
+  "stratum": "E",
+  "difficulty": "hard",
+  "language": "python",
+  "change_type": "architecture_shift",
+  "description": "Move business logic from service to model layer couples DB and domain",
+  "before_code": "# services/subscription_service.py\nclass SubscriptionService:\n    def cancel_subscription(self, subscription_id: str, reason: str) -> None:\n        sub = self.db.subscriptions.get(subscription_id)\n        if sub.status == 'cancelled':\n            raise ValueError(\"Already cancelled\")\n        if sub.status == 'past_due':\n            self._handle_past_due_cancellation(sub)\n        sub.status = 'cancelled'\n        sub.cancelled_at = datetime.now()\n        sub.cancellation_reason = reason\n        self.db.subscriptions.save(sub)\n        self.event_bus.emit('subscription.cancelled', sub)\n        self.email_service.send_cancellation_email(sub.user_email)",
+  "after_code": "# models/subscription.py\nclass Subscription(Base):\n    __tablename__ = 'subscriptions'\n    # ... columns ...\n\n    def cancel(self, reason: str) -> None:\n        if self.status == 'cancelled':\n            raise ValueError(\"Already cancelled\")\n        self.status = 'cancelled'\n        self.cancelled_at = datetime.now()\n        self.cancellation_reason = reason\n        db.session.commit()\n        event_bus.emit('subscription.cancelled', self)\n        email_service.send_cancellation_email(self.user_email)",
+  "diff_summary": "Moved cancel_subscription logic from SubscriptionService into a cancel() method on the Subscription model",
+  "ground_truth": {
+    "will_break": [],
+    "edge_cases": [
+      "db.session.commit() in the model method commits all pending changes in the session, not just this subscription \u2014 other dirty objects are committed as side effect"
+    ],
+    "broken_pattern": "Active Record pattern mixes persistence (db.session.commit), domain logic, events, and email in one place \u2014 violates separation of concerns; model now imports from service/infrastructure layer creating circular dependencies",
+    "next_prompt": "Other database changes are getting committed when we cancel subscriptions \u2014 why?",
+    "verified_by": "git_analogy",
+    "notes": "Moving business logic to model creates fat model anti-pattern and session commit side effects"
+  },
+  "token_cost_manual_followup": 35
+}

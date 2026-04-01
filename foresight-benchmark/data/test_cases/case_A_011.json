@@ -1,0 +1,24 @@
+{
+  "id": "case_A_011",
+  "stratum": "A",
+  "difficulty": "easy",
+  "language": "typescript",
+  "change_type": "bug_fix",
+  "description": "paginate returns wrong slice indices",
+  "before_code": "// pagination.ts\nexport function paginate<T>(items: T[], page: number, pageSize: number): T[] {\n  const start = (page - 1) * pageSize;\n  return items.slice(start, start + pageSize);\n}",
+  "after_code": "// pagination.ts\nexport function paginate<T>(items: T[], page: number, pageSize: number): T[] {\n  const start = page * pageSize;\n  return items.slice(start, start + pageSize);\n}",
+  "diff_summary": "paginate changed start index from (page-1)*pageSize to page*pageSize",
+  "ground_truth": {
+    "will_break": [
+      "Page 1 now returns items 10-19 instead of 0-9; first page is skipped entirely; last page returns empty array"
+    ],
+    "edge_cases": [
+      "page=0 now returns first page (previously would skip), changing behavior for callers that pass 0-indexed pages"
+    ],
+    "broken_pattern": "Pagination changed from 1-indexed to 0-indexed without updating callers",
+    "next_prompt": "The first page of results is missing \u2014 the list starts from item 11",
+    "verified_by": "injected_bug",
+    "notes": "Off-by-one in pagination index"
+  },
+  "token_cost_manual_followup": 31
+}

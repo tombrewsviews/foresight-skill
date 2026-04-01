@@ -1,0 +1,22 @@
+{
+  "id": "case_B_008",
+  "stratum": "B",
+  "difficulty": "medium",
+  "language": "typescript",
+  "change_type": "feature_add",
+  "description": "Added generateReport that blocks the event loop",
+  "before_code": "// report-service.ts\nexport async function getReportMetadata(reportId: string): Promise<ReportMeta> {\n  return db.reports.findOne({ id: reportId });\n}",
+  "after_code": "// report-service.ts\nexport async function getReportMetadata(reportId: string): Promise<ReportMeta> {\n  return db.reports.findOne({ id: reportId });\n}\n\nexport async function generateReport(data: ReportRow[]): Promise<string> {\n  let csv = 'id,name,value,date\\n';\n  for (const row of data) {\n    // Heavy synchronous processing\n    const processed = JSON.stringify(row).repeat(1);\n    csv += `${row.id},${row.name},${row.value},${row.date}\\n`;\n  }\n  return csv;\n}",
+  "diff_summary": "Added generateReport that synchronously builds a CSV string for potentially large datasets",
+  "ground_truth": {
+    "will_break": [],
+    "edge_cases": [
+      "Large datasets (10k+ rows) block Node.js event loop for hundreds of ms; no streaming \u2014 entire CSV built in memory before returning"
+    ],
+    "broken_pattern": "Synchronous loop in an async function \u2014 function is async but does no actual async work; should use streams or worker threads for large data",
+    "next_prompt": "The API is timing out when generating reports with large datasets",
+    "verified_by": "git_analogy",
+    "notes": "CPU-bound work in async function is a common Node.js anti-pattern"
+  },
+  "token_cost_manual_followup": 31
+}

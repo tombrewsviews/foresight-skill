@@ -1,0 +1,24 @@
+{
+  "id": "case_C_010",
+  "stratum": "C",
+  "difficulty": "medium",
+  "language": "python",
+  "change_type": "refactor",
+  "description": "Extract hash_password changes algorithm without migration",
+  "before_code": "# user_auth.py\nimport hashlib\n\ndef hash_password(password: str, salt: str) -> str:\n    return hashlib.sha256((password + salt).encode()).hexdigest()\n\ndef verify_password(password: str, salt: str, stored_hash: str) -> bool:\n    return hash_password(password, salt) == stored_hash",
+  "after_code": "# crypto_utils.py\nimport bcrypt\n\ndef hash_password(password: str) -> str:\n    return bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()\n\ndef verify_password(password: str, stored_hash: str) -> bool:\n    return bcrypt.checkpw(password.encode(), stored_hash.encode())\n\n# user_auth.py\nfrom crypto_utils import hash_password, verify_password",
+  "diff_summary": "Migrated password hashing from SHA-256 with salt to bcrypt in extracted utility",
+  "ground_truth": {
+    "will_break": [
+      "verify_password now fails for all existing users \u2014 bcrypt.checkpw against SHA-256 hashes always returns False; all users locked out until passwords reset"
+    ],
+    "edge_cases": [
+      "No migration path \u2014 existing sha256 hashes in DB are incompatible with bcrypt verification; salt parameter removed breaks any callers passing salt"
+    ],
+    "broken_pattern": "Algorithm change requires a migration strategy (e.g. detect hash type, verify old way and re-hash); dropped the salt parameter breaks existing call sites",
+    "next_prompt": "All existing users can't log in after the deployment",
+    "verified_by": "git_analogy",
+    "notes": "Changing hash algorithm without migration is a user-locking bug"
+  },
+  "token_cost_manual_followup": 28
+}

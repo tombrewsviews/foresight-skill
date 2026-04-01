@@ -1,0 +1,24 @@
+{
+  "id": "case_C_006",
+  "stratum": "C",
+  "difficulty": "medium",
+  "language": "python",
+  "change_type": "refactor",
+  "description": "Extract parse_config breaks environment-specific overrides",
+  "before_code": "# app.py\nimport os, json\n\ndef load_config():\n    with open('config.json') as f:\n        config = json.load(f)\n    # Environment overrides\n    if os.environ.get('DEBUG'):\n        config['debug'] = True\n    if os.environ.get('DB_URL'):\n        config['database']['url'] = os.environ['DB_URL']\n    return config",
+  "after_code": "# config_utils.py\nimport json\n\ndef parse_config(path: str = 'config.json') -> dict:\n    with open(path) as f:\n        return json.load(f)\n\n# app.py\nfrom config_utils import parse_config\n\ndef load_config():\n    return parse_config()",
+  "diff_summary": "Extracted config parsing into parse_config utility, but env var override logic was not carried over",
+  "ground_truth": {
+    "will_break": [
+      "DB_URL environment variable no longer overrides database config \u2014 production deployments that set DB_URL will use config.json value instead, likely pointing to dev DB"
+    ],
+    "edge_cases": [
+      "DEBUG env var no longer enables debug mode \u2014 production debug flag now controlled only by config.json, not deployment environment"
+    ],
+    "broken_pattern": "Config loading should merge file + environment; extracted utility handles only file loading; 12-factor app pattern (env vars override config) broken",
+    "next_prompt": "Production is connecting to the wrong database \u2014 DB_URL env var is being ignored",
+    "verified_by": "git_analogy",
+    "notes": "Env var overrides are critical in production and easily lost during refactoring"
+  },
+  "token_cost_manual_followup": 35
+}

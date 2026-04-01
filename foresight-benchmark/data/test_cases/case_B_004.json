@@ -1,0 +1,22 @@
+{
+  "id": "case_B_004",
+  "stratum": "B",
+  "difficulty": "medium",
+  "language": "typescript",
+  "change_type": "feature_add",
+  "description": "Added cacheResult wrapper without cache invalidation",
+  "before_code": "// product-service.ts\nexport async function getProduct(id: string): Promise<Product> {\n  return db.products.findOne({ id });\n}",
+  "after_code": "// product-service.ts\nconst cache = new Map<string, Product>();\n\nexport async function getProduct(id: string): Promise<Product> {\n  if (cache.has(id)) return cache.get(id)!;\n  const product = await db.products.findOne({ id });\n  cache.set(id, product);\n  return product;\n}",
+  "diff_summary": "Added in-memory cache Map to getProduct with no TTL or invalidation",
+  "ground_truth": {
+    "will_break": [],
+    "edge_cases": [
+      "Product updates never reflected \u2014 cache serves stale data indefinitely; deleted products still returned from cache; cache grows unbounded in long-running process"
+    ],
+    "broken_pattern": "Module-level mutable Map cache is a singleton \u2014 no invalidation, no TTL, no max size; rest of codebase uses Redis for caching with TTL",
+    "next_prompt": "Product price changes aren't showing up \u2014 users are seeing old prices",
+    "verified_by": "git_analogy",
+    "notes": "Cache without invalidation is worse than no cache for correctness"
+  },
+  "token_cost_manual_followup": 32
+}

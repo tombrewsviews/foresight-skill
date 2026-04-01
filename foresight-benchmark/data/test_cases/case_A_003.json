@@ -1,0 +1,24 @@
+{
+  "id": "case_A_003",
+  "stratum": "A",
+  "difficulty": "easy",
+  "language": "typescript",
+  "change_type": "bug_fix",
+  "description": "formatCurrency incorrectly divides by 100 always",
+  "before_code": "// format.ts\nexport function formatCurrency(cents: number, currency = 'USD'): string {\n  const dollars = cents / 100;\n  return new Intl.NumberFormat('en-US', { style: 'currency', currency }).format(dollars);\n}\n\nexport function formatLineItem(label: string, cents: number): string {\n  return `${label}: ${formatCurrency(cents)}`;\n}",
+  "after_code": "// format.ts\nexport function formatCurrency(amount: number, currency = 'USD'): string {\n  return new Intl.NumberFormat('en-US', { style: 'currency', currency }).format(amount);\n}\n\nexport function formatLineItem(label: string, cents: number): string {\n  return `${label}: ${formatCurrency(cents)}`;\n}",
+  "diff_summary": "formatCurrency parameter renamed from cents to amount and division by 100 removed",
+  "ground_truth": {
+    "will_break": [
+      "formatLineItem still passes cents to formatCurrency \u2014 displays 100x the correct amount (e.g. $9999.00 instead of $99.99)"
+    ],
+    "edge_cases": [
+      "Any caller passing cents (not dollars) now shows inflated prices silently"
+    ],
+    "broken_pattern": "Function semantics changed from cents-in to dollars-in without updating callers or renaming the parameter at call sites",
+    "next_prompt": "Prices in the cart are showing 100 times the expected amount",
+    "verified_by": "injected_bug",
+    "notes": "Classic unit mismatch \u2014 changed the contract without updating callers"
+  },
+  "token_cost_manual_followup": 30
+}

@@ -1,0 +1,22 @@
+{
+  "id": "case_C_009",
+  "stratum": "C",
+  "difficulty": "medium",
+  "language": "python",
+  "change_type": "refactor",
+  "description": "Extract retry_on_failure decorator changes exception handling scope",
+  "before_code": "# external_api.py\nimport time, requests\n\ndef call_weather_api(city: str) -> dict:\n    for attempt in range(3):\n        try:\n            response = requests.get(f\"https://api.weather.com/{city}\", timeout=5)\n            response.raise_for_status()\n            return response.json()\n        except requests.Timeout:\n            if attempt == 2: raise\n            time.sleep(2 ** attempt)\n        except requests.HTTPError as e:\n            if e.response.status_code >= 500:\n                if attempt == 2: raise\n                time.sleep(2 ** attempt)\n            else:\n                raise  # don't retry 4xx",
+  "after_code": "# retry_utils.py\nimport time, functools\n\ndef retry_on_failure(max_attempts=3):\n    def decorator(func):\n        @functools.wraps(func)\n        def wrapper(*args, **kwargs):\n            for attempt in range(max_attempts):\n                try:\n                    return func(*args, **kwargs)\n                except Exception:\n                    if attempt == max_attempts - 1: raise\n                    time.sleep(2 ** attempt)\n        return wrapper\n    return decorator\n\n# external_api.py\nimport requests\nfrom retry_utils import retry_on_failure\n\n@retry_on_failure(max_attempts=3)\ndef call_weather_api(city: str) -> dict:\n    response = requests.get(f\"https://api.weather.com/{city}\", timeout=5)\n    response.raise_for_status()\n    return response.json()",
+  "diff_summary": "Extracted retry logic into retry_on_failure decorator that catches all Exception types",
+  "ground_truth": {
+    "will_break": [],
+    "edge_cases": [
+      "Retries 404/401/400 responses (HTTPError for 4xx) \u2014 original code explicitly raised immediately on 4xx; now delays 4xx retries wasting 6 seconds before failing"
+    ],
+    "broken_pattern": "Original retry was selective (Timeout + 5xx only); new decorator retries all Exception \u2014 over-broad exception catching is an anti-pattern; retrying 4xx is wrong",
+    "next_prompt": "API calls to invalid cities are now taking 6 seconds to fail instead of immediately",
+    "verified_by": "git_analogy",
+    "notes": "catch Exception is too broad \u2014 lost selective retry logic"
+  },
+  "token_cost_manual_followup": 35
+}

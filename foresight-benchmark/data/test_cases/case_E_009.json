@@ -1,0 +1,22 @@
+{
+  "id": "case_E_009",
+  "stratum": "E",
+  "difficulty": "hard",
+  "language": "python",
+  "change_type": "architecture_shift",
+  "description": "Move session management from server to client JWT increases token scope",
+  "before_code": "# Session-based auth (server side)\n# sessions stored in Redis, revocable immediately\n\n@app.route('/login', methods=['POST'])\ndef login():\n    user = authenticate(request.json['email'], request.json['password'])\n    session_id = create_session(user.id)  # stored in Redis with 1hr TTL\n    response.set_cookie('session_id', session_id, httponly=True, secure=True)\n    return jsonify({'status': 'ok'})",
+  "after_code": "# JWT-based auth (client side)\nimport jwt\n\n@app.route('/login', methods=['POST'])\ndef login():\n    user = authenticate(request.json['email'], request.json['password'])\n    token = jwt.encode({\n        'user_id': user.id,\n        'role': user.role,\n        'org_id': user.org_id,\n        'permissions': user.permissions,\n        'exp': datetime.now() + timedelta(hours=24)\n    }, SECRET_KEY)\n    return jsonify({'token': token})",
+  "diff_summary": "Migrated from server-side sessions to JWT tokens containing user role, org, and permissions",
+  "ground_truth": {
+    "will_break": [],
+    "edge_cases": [
+      "No revocation mechanism \u2014 compromised tokens valid for 24hrs; if user role changes (e.g. deprovisioned admin), old token still grants admin access until expiry"
+    ],
+    "broken_pattern": "Sessions were immediately revocable (delete from Redis); JWTs are not revocable without a blacklist \u2014 24hr expiry means a fired employee retains access for up to 24 hours; permissions baked into token get stale",
+    "next_prompt": "How do we invalidate JWT tokens when a user is suspended or their role changes?",
+    "verified_by": "git_analogy",
+    "notes": "JWT adoption without token revocation is a common auth architecture mistake"
+  },
+  "token_cost_manual_followup": 34
+}

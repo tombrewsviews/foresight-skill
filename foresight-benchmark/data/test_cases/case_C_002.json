@@ -1,0 +1,22 @@
+{
+  "id": "case_C_002",
+  "stratum": "C",
+  "difficulty": "medium",
+  "language": "python",
+  "change_type": "refactor",
+  "description": "Extract format_price utility changes rounding behavior",
+  "before_code": "# cart.py\ndef calculate_total(items: list) -> str:\n    total = sum(item['price'] * item['qty'] for item in items)\n    return f\"${total:.2f}\"\n\n# invoice.py\ndef get_invoice_total(line_items: list) -> str:\n    total = sum(item['amount'] for item in line_items)\n    return f\"${round(total, 2):.2f}\" ",
+  "after_code": "# price_utils.py\nimport math\n\ndef format_price(amount: float) -> str:\n    return f\"${math.ceil(amount * 100) / 100:.2f}\"\n\n# cart.py\nfrom price_utils import format_price\n\ndef calculate_total(items: list) -> str:\n    total = sum(item['price'] * item['qty'] for item in items)\n    return format_price(total)\n\n# invoice.py\nfrom price_utils import format_price\n\ndef get_invoice_total(line_items: list) -> str:\n    total = sum(item['amount'] for item in line_items)\n    return format_price(total)",
+  "diff_summary": "Extracted format_price utility but uses math.ceil rounding instead of standard round()",
+  "ground_truth": {
+    "will_break": [],
+    "edge_cases": [
+      "math.ceil rounds up \u2014 $1.001 shows as $1.01 instead of $1.00; floating point totals like 10.005 now ceil to 10.01 instead of rounding to 10.00"
+    ],
+    "broken_pattern": "cart.py used :.2f (banker's rounding), invoice.py used round() \u2014 both replaced with ceil() which overcharges customers by rounding up",
+    "next_prompt": "Customer is complaining the invoice total is a penny higher than the cart total",
+    "verified_by": "git_analogy",
+    "notes": "Rounding behavior changed silently during extraction \u2014 financial logic needs exact rounding"
+  },
+  "token_cost_manual_followup": 34
+}

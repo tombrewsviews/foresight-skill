@@ -1,0 +1,22 @@
+{
+  "id": "case_E_010",
+  "stratum": "E",
+  "difficulty": "hard",
+  "language": "python",
+  "change_type": "architecture_shift",
+  "description": "Move file processing from request-time to background worker loses progress feedback",
+  "before_code": "# api/import.py\n@app.route('/import/csv', methods=['POST'])\ndef import_csv():\n    file = request.files['file']\n    results = process_csv_import(file)  # synchronous, can take 30s\n    return jsonify({\n        'imported': results.success_count,\n        'failed': results.failed_count,\n        'errors': results.errors  # specific row errors returned\n    })",
+  "after_code": "# api/import.py\nfrom tasks import process_csv_task\n\n@app.route('/import/csv', methods=['POST'])\ndef import_csv():\n    file = request.files['file']\n    file_path = save_to_temp(file)\n    job_id = process_csv_task.delay(file_path)\n    return jsonify({'job_id': str(job_id), 'status': 'processing'})",
+  "diff_summary": "Changed CSV import from synchronous processing to async Celery background task",
+  "ground_truth": {
+    "will_break": [],
+    "edge_cases": [
+      "No endpoint to check job status or retrieve results \u2014 frontend gets job_id but nowhere to poll; temp file may be deleted before worker processes it if cleanup runs first"
+    ],
+    "broken_pattern": "Async job requires a status endpoint (/import/status/{job_id}) and result storage \u2014 neither implemented; the API contract changed from synchronous result to async job without frontend coordination",
+    "next_prompt": "How do I check if the import finished? The response only gives me a job_id but there's no status endpoint",
+    "verified_by": "git_analogy",
+    "notes": "Async migration requires building status/result retrieval \u2014 half-implemented here"
+  },
+  "token_cost_manual_followup": 41
+}

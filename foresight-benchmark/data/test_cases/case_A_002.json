@@ -1,0 +1,24 @@
+{
+  "id": "case_A_002",
+  "stratum": "A",
+  "difficulty": "easy",
+  "language": "typescript",
+  "change_type": "bug_fix",
+  "description": "getDiscount returns undefined instead of 0 for non-members",
+  "before_code": "// pricing.ts\nexport type MemberTier = 'basic' | 'premium' | 'vip';\n\nexport function getDiscount(tier: MemberTier | null): number {\n  if (tier === 'vip') return 0.3;\n  if (tier === 'premium') return 0.15;\n  if (tier === 'basic') return 0.05;\n  return 0;\n}\n\nexport function getFinalPrice(price: number, tier: MemberTier | null): number {\n  return price * (1 - getDiscount(tier));\n}",
+  "after_code": "// pricing.ts\nexport type MemberTier = 'basic' | 'premium' | 'vip';\n\nexport function getDiscount(tier: MemberTier | null): number | undefined {\n  if (tier === 'vip') return 0.3;\n  if (tier === 'premium') return 0.15;\n  if (tier === 'basic') return 0.05;\n}\n\nexport function getFinalPrice(price: number, tier: MemberTier | null): number {\n  return price * (1 - getDiscount(tier));\n}",
+  "diff_summary": "getDiscount return type widened to number | undefined; removed fallback return 0",
+  "ground_truth": {
+    "will_break": [
+      "getFinalPrice: 1 - undefined = NaN for non-member users; TS error on arithmetic with undefined"
+    ],
+    "edge_cases": [
+      "null tier (guest checkout) now returns NaN price silently"
+    ],
+    "broken_pattern": "getDiscount lost its exhaustive return guarantee; callers assumed number, not number | undefined",
+    "next_prompt": "Checkout total shows NaN for guest users",
+    "verified_by": "injected_bug",
+    "notes": "Removed default return, widened type \u2014 classic 'forgot the else'"
+  },
+  "token_cost_manual_followup": 25
+}

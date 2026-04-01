@@ -1,0 +1,24 @@
+{
+  "id": "case_D_009",
+  "stratum": "D",
+  "difficulty": "hard",
+  "language": "typescript",
+  "change_type": "schema_change",
+  "description": "Config type makes all fields required from optional",
+  "before_code": "// config.ts\nexport interface AppConfig {\n  apiUrl?: string;\n  timeout?: number;\n  retries?: number;\n  debugMode?: boolean;\n  logLevel?: 'debug' | 'info' | 'warn' | 'error';\n}\n\nconst defaultConfig: AppConfig = {\n  apiUrl: 'https://api.example.com',\n  timeout: 5000,\n  retries: 3,\n};",
+  "after_code": "// config.ts\nexport interface AppConfig {\n  apiUrl: string;\n  timeout: number;\n  retries: number;\n  debugMode: boolean;\n  logLevel: 'debug' | 'info' | 'warn' | 'error';\n}\n\nconst defaultConfig: AppConfig = {\n  apiUrl: 'https://api.example.com',\n  timeout: 5000,\n  retries: 3,\n  debugMode: false,\n  logLevel: 'info',\n};",
+  "diff_summary": "Made all AppConfig fields required (removed optional markers)",
+  "ground_truth": {
+    "will_break": [
+      "Any code creating partial config objects { apiUrl: '...' } now has TS errors for missing debugMode and logLevel; tests that mock config partially fail"
+    ],
+    "edge_cases": [
+      "Code that spreads { ...defaultConfig, ...userConfig } where userConfig is Partial<AppConfig> now gets type error"
+    ],
+    "broken_pattern": "Config interfaces should stay with optional fields or use Required<> only at the point of final merging; making all fields required forces every consumer to specify everything",
+    "next_prompt": "TypeScript is complaining that our test config objects are missing required properties",
+    "verified_by": "git_analogy",
+    "notes": "Optional-to-required change in config type breaks all partial config patterns"
+  },
+  "token_cost_manual_followup": 36
+}

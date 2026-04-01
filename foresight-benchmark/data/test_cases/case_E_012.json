@@ -1,0 +1,24 @@
+{
+  "id": "case_E_012",
+  "stratum": "E",
+  "difficulty": "hard",
+  "language": "python",
+  "change_type": "architecture_shift",
+  "description": "Move search from SQL LIKE to Elasticsearch loses exact-match behavior",
+  "before_code": "# services/search_service.py\ndef search_customers(query: str, org_id: str) -> list:\n    return db.execute(\n        \"SELECT * FROM customers WHERE org_id = %s AND (name ILIKE %s OR email ILIKE %s)\",\n        (org_id, f\"%{query}%\", f\"%{query}%\")\n    )",
+  "after_code": "# services/search_service.py\nfrom elasticsearch import Elasticsearch\n\nes = Elasticsearch()\n\ndef search_customers(query: str, org_id: str) -> list:\n    result = es.search(index='customers', body={\n        'query': {\n            'multi_match': {\n                'query': query,\n                'fields': ['name', 'email']\n            }\n        }\n    })\n    return [hit['_source'] for hit in result['hits']['hits']]",
+  "diff_summary": "Replaced SQL LIKE search with Elasticsearch multi_match query",
+  "ground_truth": {
+    "will_break": [
+      "org_id filter removed \u2014 search returns customers from all organizations; multi-tenant data isolation broken"
+    ],
+    "edge_cases": [
+      "Elasticsearch index may not exist yet or may be out of sync with DB \u2014 no fallback; ES unavailable causes search to throw uncaught exception"
+    ],
+    "broken_pattern": "Critical security regression: org_id scoping removed; ES multi_match uses relevance scoring (fuzzy) vs SQL ILIKE (exact substring) \u2014 behavior change not communicated; no ES index management or sync shown",
+    "next_prompt": "Customer search is returning results from other companies' accounts",
+    "verified_by": "git_analogy",
+    "notes": "Architecture migration dropped the security filter \u2014 critical multi-tenant isolation bug"
+  },
+  "token_cost_manual_followup": 31
+}

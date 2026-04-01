@@ -1,0 +1,24 @@
+{
+  "id": "case_A_007",
+  "stratum": "A",
+  "difficulty": "easy",
+  "language": "typescript",
+  "change_type": "bug_fix",
+  "description": "getUserById swapped optional and required param",
+  "before_code": "// user-service.ts\nexport async function getUserById(id: string, includeDeleted?: boolean): Promise<User | null> {\n  const filter = includeDeleted ? {} : { deletedAt: null };\n  return db.users.findOne({ id, ...filter });\n}",
+  "after_code": "// user-service.ts\nexport async function getUserById(includeDeleted?: boolean, id?: string): Promise<User | null> {\n  const filter = includeDeleted ? {} : { deletedAt: null };\n  return db.users.findOne({ id, ...filter });\n}",
+  "diff_summary": "getUserById parameter order swapped: id moved to second optional position, includeDeleted moved first",
+  "ground_truth": {
+    "will_break": [
+      "All call sites getUserById(userId) now pass userId as includeDeleted (boolean coercion); id is undefined; all lookups return null"
+    ],
+    "edge_cases": [
+      "getUserById('admin-123') coerces string to truthy \u2014 includeDeleted=true, id=undefined; admin checks broken"
+    ],
+    "broken_pattern": "Required parameter made optional and moved after optional \u2014 violates TypeScript convention; all existing callers silently broken",
+    "next_prompt": "User lookups are all returning null / 404s everywhere",
+    "verified_by": "injected_bug",
+    "notes": "Swapped param order \u2014 no TS error at definition, errors manifest at call sites"
+  },
+  "token_cost_manual_followup": 28
+}

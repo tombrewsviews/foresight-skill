@@ -1,0 +1,24 @@
+{
+  "id": "case_D_004",
+  "stratum": "D",
+  "difficulty": "hard",
+  "language": "typescript",
+  "change_type": "schema_change",
+  "description": "Database schema adds NOT NULL column without migration default",
+  "before_code": "-- migration_003.sql\nCREATE TABLE orders (\n  id UUID PRIMARY KEY,\n  user_id UUID NOT NULL REFERENCES users(id),\n  total_cents INTEGER NOT NULL,\n  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()\n);",
+  "after_code": "-- migration_004.sql\nALTER TABLE orders ADD COLUMN shipping_address_id UUID NOT NULL REFERENCES addresses(id);",
+  "diff_summary": "Added NOT NULL shipping_address_id column to orders table without a default value",
+  "ground_truth": {
+    "will_break": [
+      "Migration fails on existing rows \u2014 PostgreSQL cannot add NOT NULL column without DEFAULT to a non-empty table; 'ERROR: column contains null values'"
+    ],
+    "edge_cases": [
+      "Even if table is empty in prod, application code that creates orders without shipping_address_id will fail immediately after migration"
+    ],
+    "broken_pattern": "NOT NULL addition requires: add as nullable, backfill data, then add NOT NULL constraint; or add with a DEFAULT \u2014 skipped the backfill/default step",
+    "next_prompt": "The migration is failing in production with 'column contains null values'",
+    "verified_by": "git_analogy",
+    "notes": "Classic safe migration violation \u2014 adding NOT NULL without default breaks on live data"
+  },
+  "token_cost_manual_followup": 33
+}

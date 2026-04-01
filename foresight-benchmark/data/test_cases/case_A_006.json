@@ -1,0 +1,24 @@
+{
+  "id": "case_A_006",
+  "stratum": "A",
+  "difficulty": "easy",
+  "language": "typescript",
+  "change_type": "bug_fix",
+  "description": "sumArray uses wrong accumulator initial value",
+  "before_code": "// math-utils.ts\nexport function sumArray(nums: number[]): number {\n  return nums.reduce((acc, n) => acc + n, 0);\n}\n\nexport function average(nums: number[]): number {\n  if (nums.length === 0) return 0;\n  return sumArray(nums) / nums.length;\n}",
+  "after_code": "// math-utils.ts\nexport function sumArray(nums: number[]): number {\n  return nums.reduce((acc, n) => acc + n);\n}\n\nexport function average(nums: number[]): number {\n  if (nums.length === 0) return 0;\n  return sumArray(nums) / nums.length;\n}",
+  "diff_summary": "sumArray reduce() lost its initialValue argument (0)",
+  "ground_truth": {
+    "will_break": [
+      "sumArray([]) now throws 'Reduce of empty array with no initial value' \u2014 average([]) guard doesn't help because it calls sumArray after the guard"
+    ],
+    "edge_cases": [
+      "Single-element array [5] returns 5 correctly, masking the bug in most tests"
+    ],
+    "broken_pattern": "reduce() without initialValue is fragile \u2014 rest of codebase uses initialValue consistently",
+    "next_prompt": "Getting an unhandled error when computing statistics on empty datasets",
+    "verified_by": "injected_bug",
+    "notes": "Removing initialValue from reduce is a subtle empty-array trap"
+  },
+  "token_cost_manual_followup": 32
+}

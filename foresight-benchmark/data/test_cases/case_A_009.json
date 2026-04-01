@@ -1,0 +1,24 @@
+{
+  "id": "case_A_009",
+  "stratum": "A",
+  "difficulty": "easy",
+  "language": "typescript",
+  "change_type": "bug_fix",
+  "description": "sortByDate mutates original array",
+  "before_code": "// list-utils.ts\nexport function sortByDate(items: { createdAt: string }[]): { createdAt: string }[] {\n  return [...items].sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());\n}",
+  "after_code": "// list-utils.ts\nexport function sortByDate(items: { createdAt: string }[]): { createdAt: string }[] {\n  return items.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());\n}",
+  "diff_summary": "sortByDate removed spread copy [...items], now mutates the input array directly",
+  "ground_truth": {
+    "will_break": [
+      "Callers that reuse the original array after sorting get it in sorted order unexpectedly \u2014 React state updates with stale sorted array cause render bugs"
+    ],
+    "edge_cases": [
+      "Store/redux state arrays mutated in place \u2014 immutability invariant violated, change detection breaks"
+    ],
+    "broken_pattern": "Removed defensive copy; rest of list-utils functions use spread to avoid mutation",
+    "next_prompt": "The list order is getting corrupted after sorting \u2014 other views showing sorted instead of original order",
+    "verified_by": "injected_bug",
+    "notes": "Classic mutation vs. immutability bug \u2014 easy to miss, hard to debug"
+  },
+  "token_cost_manual_followup": 41
+}

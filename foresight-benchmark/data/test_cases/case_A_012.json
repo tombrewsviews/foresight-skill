@@ -1,0 +1,24 @@
+{
+  "id": "case_A_012",
+  "stratum": "A",
+  "difficulty": "easy",
+  "language": "typescript",
+  "change_type": "bug_fix",
+  "description": "clamp function min/max parameters swapped in body",
+  "before_code": "// math.ts\nexport function clamp(value: number, min: number, max: number): number {\n  return Math.min(Math.max(value, min), max);\n}",
+  "after_code": "// math.ts\nexport function clamp(value: number, min: number, max: number): number {\n  return Math.max(Math.min(value, min), max);\n}",
+  "diff_summary": "clamp swapped Math.min and Math.max order \u2014 now returns max when value is below min",
+  "ground_truth": {
+    "will_break": [
+      "clamp(5, 0, 10) returns 10 instead of 5 \u2014 all values clamped to max; UI sliders, progress bars, volume controls broken"
+    ],
+    "edge_cases": [
+      "clamp(0, 0, 10) returns 10 \u2014 even boundary values are wrong"
+    ],
+    "broken_pattern": "Inverted min/max logic; function now always returns max for any input below max",
+    "next_prompt": "Sliders are jumping to max value \u2014 clamping isn't working correctly",
+    "verified_by": "injected_bug",
+    "notes": "Swapped Math.min/Math.max nesting \u2014 subtle but breaks everything"
+  },
+  "token_cost_manual_followup": 31
+}

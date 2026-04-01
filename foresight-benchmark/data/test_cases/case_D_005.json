@@ -1,0 +1,24 @@
+{
+  "id": "case_D_005",
+  "stratum": "D",
+  "difficulty": "hard",
+  "language": "typescript",
+  "change_type": "schema_change",
+  "description": "GraphQL schema type field changes from nullable to non-null breaking clients",
+  "before_code": "# schema.graphql\ntype Product {\n  id: ID!\n  name: String!\n  description: String    # nullable\n  price: Float!\n  imageUrl: String       # nullable\n}",
+  "after_code": "# schema.graphql\ntype Product {\n  id: ID!\n  name: String!\n  description: String!   # now non-null\n  price: Float!\n  imageUrl: String!      # now non-null\n}",
+  "diff_summary": "Made description and imageUrl fields non-nullable in GraphQL Product type",
+  "ground_truth": {
+    "will_break": [
+      "Existing products in DB with null description or imageUrl will cause GraphQL to return null for non-null field \u2014 runtime error: 'Cannot return null for non-nullable field'"
+    ],
+    "edge_cases": [
+      "Apollo Client and other clients that cached the old schema will have stale type information; queries expecting null handling will break"
+    ],
+    "broken_pattern": "Changing nullable to non-null in GraphQL is a breaking schema change \u2014 requires ensuring all existing data has values before tightening the type",
+    "next_prompt": "GraphQL is throwing 'Cannot return null for non-nullable field Product.description' for older products",
+    "verified_by": "git_analogy",
+    "notes": "GraphQL null-to-non-null change requires data backfill first"
+  },
+  "token_cost_manual_followup": 40
+}

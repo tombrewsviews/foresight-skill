@@ -1,0 +1,24 @@
+{
+  "id": "case_D_011",
+  "stratum": "D",
+  "difficulty": "hard",
+  "language": "typescript",
+  "change_type": "schema_change",
+  "description": "TypeScript generic constraint tightening breaks existing usages",
+  "before_code": "// repository.ts\nexport class Repository<T> {\n  async findById(id: string): Promise<T | null> {\n    return this.db.findOne({ id });\n  }\n  async save(entity: T): Promise<T> {\n    return this.db.upsert(entity);\n  }\n}",
+  "after_code": "// repository.ts\ninterface HasId {\n  id: string;\n}\n\nexport class Repository<T extends HasId> {\n  async findById(id: string): Promise<T | null> {\n    return this.db.findOne({ id });\n  }\n  async save(entity: T): Promise<T> {\n    return this.db.upsert(entity);\n  }\n}",
+  "diff_summary": "Added T extends HasId constraint to Repository generic class",
+  "ground_truth": {
+    "will_break": [
+      "Any Repository<SomeType> where SomeType doesn't have an id: string field now gets TS error \u2014 breaking repositories using numeric IDs or UUID id fields typed as UUID not string"
+    ],
+    "edge_cases": [
+      "Repository<{ _id: string }> (MongoDB style) breaks \u2014 _id not id; Repository<{ id: number }> breaks \u2014 number not string"
+    ],
+    "broken_pattern": "Tightening a generic constraint is a breaking change for all existing type parameters that don't satisfy the new constraint",
+    "next_prompt": "TypeScript error: Type 'ProductEntity' does not satisfy the constraint 'HasId'",
+    "verified_by": "git_analogy",
+    "notes": "Generic constraint tightening is a type-level breaking change"
+  },
+  "token_cost_manual_followup": 34
+}

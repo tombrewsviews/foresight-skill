@@ -1,0 +1,24 @@
+{
+  "id": "case_A_004",
+  "stratum": "A",
+  "difficulty": "easy",
+  "language": "typescript",
+  "change_type": "bug_fix",
+  "description": "isValidEmail regex accidentally inverted",
+  "before_code": "// validation.ts\nexport function isValidEmail(email: string): boolean {\n  const pattern = /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/;\n  return pattern.test(email);\n}\n\nexport function validateFormField(field: string, value: string): string | null {\n  if (field === 'email' && !isValidEmail(value)) {\n    return 'Invalid email address';\n  }\n  return null;\n}",
+  "after_code": "// validation.ts\nexport function isValidEmail(email: string): boolean {\n  const pattern = /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/;\n  return !pattern.test(email);\n}\n\nexport function validateFormField(field: string, value: string): string | null {\n  if (field === 'email' && !isValidEmail(value)) {\n    return 'Invalid email address';\n  }\n  return null;\n}",
+  "diff_summary": "isValidEmail now returns !pattern.test(email) instead of pattern.test(email)",
+  "ground_truth": {
+    "will_break": [
+      "validateFormField accepts all invalid emails and rejects all valid ones \u2014 form signup broken for every user"
+    ],
+    "edge_cases": [
+      "Empty string and malformed input now pass validation"
+    ],
+    "broken_pattern": "Boolean return inverted silently \u2014 no type error, no test would catch unless testing both valid and invalid inputs",
+    "next_prompt": "Users can't sign up \u2014 valid emails are being rejected",
+    "verified_by": "injected_bug",
+    "notes": "! operator added to return \u2014 silent logic inversion"
+  },
+  "token_cost_manual_followup": 28
+}

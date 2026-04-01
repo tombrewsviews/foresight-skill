@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python:*)",
+      "Bash(python3:*)",
+      "Bash(claude skill:*)",
+      "Bash(pip3 --version)",
+      "Bash(pip3 install:*)"
+    ]
+  }
+}

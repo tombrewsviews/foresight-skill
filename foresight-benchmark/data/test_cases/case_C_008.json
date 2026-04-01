@@ -1,0 +1,24 @@
+{
+  "id": "case_C_008",
+  "stratum": "C",
+  "difficulty": "medium",
+  "language": "python",
+  "change_type": "refactor",
+  "description": "Extract paginate_query loses total count for pagination UI",
+  "before_code": "# api/users.py\ndef list_users(page: int, page_size: int = 20) -> dict:\n    offset = (page - 1) * page_size\n    users = db.execute(\"SELECT * FROM users LIMIT %s OFFSET %s\", (page_size, offset))\n    total = db.execute(\"SELECT COUNT(*) FROM users\")[0][0]\n    return {\"items\": users, \"total\": total, \"page\": page, \"page_size\": page_size}\n\n# api/posts.py\ndef list_posts(page: int, page_size: int = 20) -> dict:\n    offset = (page - 1) * page_size\n    posts = db.execute(\"SELECT * FROM posts LIMIT %s OFFSET %s\", (page_size, offset))\n    total = db.execute(\"SELECT COUNT(*) FROM posts\")[0][0]\n    return {\"items\": posts, \"total\": total, \"page\": page, \"page_size\": page_size}",
+  "after_code": "# db_utils.py\ndef paginate_query(table: str, page: int, page_size: int = 20) -> list:\n    offset = (page - 1) * page_size\n    return db.execute(f\"SELECT * FROM {table} LIMIT %s OFFSET %s\", (page_size, offset))\n\n# api/users.py\nfrom db_utils import paginate_query\n\ndef list_users(page: int, page_size: int = 20) -> dict:\n    users = paginate_query('users', page, page_size)\n    return {\"items\": users, \"page\": page}\n\n# api/posts.py\nfrom db_utils import paginate_query\n\ndef list_posts(page: int, page_size: int = 20) -> dict:\n    posts = paginate_query('posts', page, page_size)\n    return {\"items\": posts, \"page\": page}",
+  "diff_summary": "Extracted paginate_query utility but total count query removed from both endpoints",
+  "ground_truth": {
+    "will_break": [
+      "Frontend pagination UI that uses response.total to calculate page count now gets undefined \u2014 pagination controls broken"
+    ],
+    "edge_cases": [
+      "SQL injection via table name parameter \u2014 paginate_query('users; DROP TABLE users --', ...) would execute"
+    ],
+    "broken_pattern": "Response shape changed \u2014 removed 'total' and 'page_size' from response without versioning the API; table name interpolated directly into SQL",
+    "next_prompt": "The pagination controls have disappeared \u2014 the frontend can't calculate total pages",
+    "verified_by": "git_analogy",
+    "notes": "Refactor dropped functionality and introduced SQL injection"
+  },
+  "token_cost_manual_followup": 35
+}

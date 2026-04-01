@@ -1,0 +1,22 @@
+{
+  "id": "case_C_001",
+  "stratum": "C",
+  "difficulty": "medium",
+  "language": "python",
+  "change_type": "refactor",
+  "description": "Extract validate_email utility but forget to handle edge cases from original",
+  "before_code": "# user_service.py\nimport re\n\ndef create_user(email: str, username: str) -> dict:\n    if not email or '@' not in email:\n        raise ValueError(\"Invalid email\")\n    if len(email) > 254:\n        raise ValueError(\"Email too long\")\n    if '..' in email:\n        raise ValueError(\"Invalid email format\")\n    # ... create user logic\n    return {\"email\": email, \"username\": username}\n\ndef update_email(user_id: str, new_email: str) -> dict:\n    if not new_email or '@' not in new_email:\n        raise ValueError(\"Invalid email\")\n    if len(new_email) > 254:\n        raise ValueError(\"Email too long\")\n    # ... update logic\n    return {\"id\": user_id, \"email\": new_email}",
+  "after_code": "# user_service.py\nimport re\nfrom utils import validate_email\n\ndef create_user(email: str, username: str) -> dict:\n    validate_email(email)\n    return {\"email\": email, \"username\": username}\n\ndef update_email(user_id: str, new_email: str) -> dict:\n    validate_email(new_email)\n    return {\"id\": user_id, \"email\": new_email}\n\n# utils.py\ndef validate_email(email: str) -> None:\n    if not email or '@' not in email:\n        raise ValueError(\"Invalid email\")\n    if len(email) > 254:\n        raise ValueError(\"Email too long\")",
+  "diff_summary": "Extracted email validation into validate_email utility in utils.py, but '..' check not carried over",
+  "ground_truth": {
+    "will_break": [],
+    "edge_cases": [
+      "Emails with consecutive dots (e.g. 'user..name@example.com') now pass validation in create_user \u2014 the '..' check was in original but lost during extraction"
+    ],
+    "broken_pattern": "update_email had fewer checks than create_user originally \u2014 the refactor made them consistent but at the lower bar; lost a validation rule silently",
+    "next_prompt": "Can you add the double-dot check back to the email validator?",
+    "verified_by": "git_analogy",
+    "notes": "Refactoring often loses edge case handling \u2014 classic extraction bug"
+  },
+  "token_cost_manual_followup": 30
+}

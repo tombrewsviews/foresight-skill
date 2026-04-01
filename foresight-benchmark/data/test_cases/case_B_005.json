@@ -1,0 +1,22 @@
+{
+  "id": "case_B_005",
+  "stratum": "B",
+  "difficulty": "medium",
+  "language": "typescript",
+  "change_type": "feature_add",
+  "description": "Added retryRequest but retries on 4xx errors too",
+  "before_code": "// http-client.ts\nexport async function request<T>(url: string, options?: RequestInit): Promise<T> {\n  const res = await fetch(url, options);\n  if (!res.ok) throw new Error(`HTTP ${res.status}`);\n  return res.json();\n}",
+  "after_code": "// http-client.ts\nexport async function request<T>(url: string, options?: RequestInit): Promise<T> {\n  const res = await fetch(url, options);\n  if (!res.ok) throw new Error(`HTTP ${res.status}`);\n  return res.json();\n}\n\nexport async function retryRequest<T>(url: string, options?: RequestInit, retries = 3): Promise<T> {\n  for (let i = 0; i < retries; i++) {\n    try {\n      return await request<T>(url, options);\n    } catch (e) {\n      if (i === retries - 1) throw e;\n      await new Promise(r => setTimeout(r, 1000 * (i + 1)));\n    }\n  }\n  throw new Error('Max retries exceeded');\n}",
+  "diff_summary": "Added retryRequest function that retries any failed request up to 3 times with exponential backoff",
+  "ground_truth": {
+    "will_break": [],
+    "edge_cases": [
+      "Retries 401/403/404 responses \u2014 3x the backend load for auth failures; retrying a POST may cause duplicate mutations (non-idempotent)"
+    ],
+    "broken_pattern": "Should only retry 5xx (server errors) and network failures, not 4xx (client errors); no check for non-idempotent methods (POST/PATCH)",
+    "next_prompt": "Login failures are taking 7 seconds instead of responding immediately",
+    "verified_by": "git_analogy",
+    "notes": "Retry-all is a common mistake \u2014 4xx retries waste time and can cause duplicates"
+  },
+  "token_cost_manual_followup": 32
+}

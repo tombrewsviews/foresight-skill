@@ -1,0 +1,22 @@
+{
+  "id": "case_E_001",
+  "stratum": "E",
+  "difficulty": "hard",
+  "language": "python",
+  "change_type": "architecture_shift",
+  "description": "Move authentication from middleware to service layer loses request context",
+  "before_code": "# middleware/auth.py\nfrom flask import request, g\n\ndef require_auth(f):\n    @wraps(f)\n    def decorated(*args, **kwargs):\n        token = request.headers.get('Authorization', '').replace('Bearer ', '')\n        user = verify_token(token)\n        if not user:\n            return jsonify({'error': 'Unauthorized'}), 401\n        g.current_user = user\n        return f(*args, **kwargs)\n    return decorated\n\n# routes/orders.py\n@app.route('/orders')\n@require_auth\ndef list_orders():\n    return jsonify(order_service.get_orders(g.current_user.id))",
+  "after_code": "# services/auth_service.py\nclass AuthService:\n    def authenticate(self, token: str) -> Optional[User]:\n        return verify_token(token.replace('Bearer ', ''))\n\n# routes/orders.py\nauth_service = AuthService()\n\n@app.route('/orders')\ndef list_orders():\n    token = request.headers.get('Authorization', '')\n    user = auth_service.authenticate(token)\n    if not user:\n        return jsonify({'error': 'Unauthorized'}), 401\n    return jsonify(order_service.get_orders(user.id))",
+  "diff_summary": "Moved authentication from @require_auth decorator middleware to inline AuthService call in each route",
+  "ground_truth": {
+    "will_break": [],
+    "edge_cases": [
+      "Routes that forgot to add the inline auth check now have no authentication \u2014 any new route added will silently have no auth unless developer remembers to add it manually"
+    ],
+    "broken_pattern": "Decorator pattern enforced auth at the framework level; inline auth relies on developer discipline \u2014 easier to miss; g.current_user pattern removed means any code reading g.current_user elsewhere breaks",
+    "next_prompt": "New routes we're adding don't seem to require authentication \u2014 did we break the auth middleware?",
+    "verified_by": "git_analogy",
+    "notes": "Moving auth from declarative (decorator) to imperative (inline) reduces security by default"
+  },
+  "token_cost_manual_followup": 39
+}

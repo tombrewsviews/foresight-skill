@@ -1,0 +1,22 @@
+{
+  "id": "case_B_009",
+  "stratum": "B",
+  "difficulty": "medium",
+  "language": "typescript",
+  "change_type": "feature_add",
+  "description": "Added useInfiniteScroll hook that fires on every scroll event",
+  "before_code": "// scroll-hooks.ts\nimport { useEffect, useRef } from 'react';\n\nexport function useScrollToTop(smooth = true) {\n  return () => window.scrollTo({ top: 0, behavior: smooth ? 'smooth' : 'auto' });\n}",
+  "after_code": "// scroll-hooks.ts\nimport { useEffect, useRef, useState } from 'react';\n\nexport function useScrollToTop(smooth = true) {\n  return () => window.scrollTo({ top: 0, behavior: smooth ? 'smooth' : 'auto' });\n}\n\nexport function useInfiniteScroll(onLoadMore: () => void, threshold = 200) {\n  useEffect(() => {\n    const handleScroll = () => {\n      const nearBottom = window.innerHeight + window.scrollY >= document.body.offsetHeight - threshold;\n      if (nearBottom) onLoadMore();\n    };\n    window.addEventListener('scroll', handleScroll);\n    return () => window.removeEventListener('scroll', handleScroll);\n  }, [onLoadMore, threshold]);\n}",
+  "diff_summary": "Added useInfiniteScroll hook that calls onLoadMore when user scrolls near bottom",
+  "ground_truth": {
+    "will_break": [],
+    "edge_cases": [
+      "onLoadMore fires repeatedly on every scroll event when near bottom \u2014 floods API with requests; no loading state guard or debounce"
+    ],
+    "broken_pattern": "No throttle/debounce on scroll handler \u2014 fires at 60fps; no isLoading check to prevent concurrent load-more calls; threshold check is one-shot but re-fires continuously",
+    "next_prompt": "Infinite scroll is making hundreds of API requests when I scroll to the bottom",
+    "verified_by": "git_analogy",
+    "notes": "Scroll handler without throttle is a classic performance/correctness bug"
+  },
+  "token_cost_manual_followup": 34
+}

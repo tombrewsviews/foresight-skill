@@ -1,0 +1,22 @@
+{
+  "id": "case_B_006",
+  "stratum": "B",
+  "difficulty": "medium",
+  "language": "typescript",
+  "change_type": "feature_add",
+  "description": "Added useDebounce hook with missing cleanup",
+  "before_code": "// hooks.ts\nimport { useState, useEffect } from 'react';\n\nexport function useLocalStorage<T>(key: string, initialValue: T) {\n  const [value, setValue] = useState<T>(() => {\n    const stored = localStorage.getItem(key);\n    return stored ? JSON.parse(stored) : initialValue;\n  });\n  useEffect(() => { localStorage.setItem(key, JSON.stringify(value)); }, [key, value]);\n  return [value, setValue] as const;\n}",
+  "after_code": "// hooks.ts\nimport { useState, useEffect, useRef } from 'react';\n\nexport function useLocalStorage<T>(key: string, initialValue: T) {\n  const [value, setValue] = useState<T>(() => {\n    const stored = localStorage.getItem(key);\n    return stored ? JSON.parse(stored) : initialValue;\n  });\n  useEffect(() => { localStorage.setItem(key, JSON.stringify(value)); }, [key, value]);\n  return [value, setValue] as const;\n}\n\nexport function useDebounce<T>(value: T, delay: number): T {\n  const [debouncedValue, setDebouncedValue] = useState<T>(value);\n  useEffect(() => {\n    const timer = setTimeout(() => setDebouncedValue(value), delay);\n  }, [value, delay]);\n  return debouncedValue;\n}",
+  "diff_summary": "Added useDebounce hook that delays value updates using setTimeout",
+  "ground_truth": {
+    "will_break": [],
+    "edge_cases": [
+      "Timer not cleared on unmount or value change \u2014 state update after unmount causes React memory leak warning; rapid input changes stack up timers"
+    ],
+    "broken_pattern": "useEffect missing return () => clearTimeout(timer) \u2014 useLocalStorage in same file correctly uses no timer but the pattern for cleanup is established in React docs",
+    "next_prompt": "Getting 'Can't perform a React state update on an unmounted component' warning in console",
+    "verified_by": "git_analogy",
+    "notes": "Missing cleanup in useEffect is one of the most common React hooks mistakes"
+  },
+  "token_cost_manual_followup": 37
+}

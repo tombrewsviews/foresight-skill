@@ -1,0 +1,242 @@
+[
+  {
+    "id": "case_A_001",
+    "stratum": "A"
+  },
+  {
+    "id": "case_A_002",
+    "stratum": "A"
+  },
+  {
+    "id": "case_A_003",
+    "stratum": "A"
+  },
+  {
+    "id": "case_A_004",
+    "stratum": "A"
+  },
+  {
+    "id": "case_A_005",
+    "stratum": "A"
+  },
+  {
+    "id": "case_A_006",
+    "stratum": "A"
+  },
+  {
+    "id": "case_A_007",
+    "stratum": "A"
+  },
+  {
+    "id": "case_A_008",
+    "stratum": "A"
+  },
+  {
+    "id": "case_A_009",
+    "stratum": "A"
+  },
+  {
+    "id": "case_A_010",
+    "stratum": "A"
+  },
+  {
+    "id": "case_A_011",
+    "stratum": "A"
+  },
+  {
+    "id": "case_A_012",
+    "stratum": "A"
+  },
+  {
+    "id": "case_B_001",
+    "stratum": "B"
+  },
+  {
+    "id": "case_B_002",
+    "stratum": "B"
+  },
+  {
+    "id": "case_B_003",
+    "stratum": "B"
+  },
+  {
+    "id": "case_B_004",
+    "stratum": "B"
+  },
+  {
+    "id": "case_B_005",
+    "stratum": "B"
+  },
+  {
+    "id": "case_B_006",
+    "stratum": "B"
+  },
+  {
+    "id": "case_B_007",
+    "stratum": "B"
+  },
+  {
+    "id": "case_B_008",
+    "stratum": "B"
+  },
+  {
+    "id": "case_B_009",
+    "stratum": "B"
+  },
+  {
+    "id": "case_B_010",
+    "stratum": "B"
+  },
+  {
+    "id": "case_B_011",
+    "stratum": "B"
+  },
+  {
+    "id": "case_B_012",
+    "stratum": "B"
+  },
+  {
+    "id": "case_C_001",
+    "stratum": "C"
+  },
+  {
+    "id": "case_C_002",
+    "stratum": "C"
+  },
+  {
+    "id": "case_C_003",
+    "stratum": "C"
+  },
+  {
+    "id": "case_C_004",
+    "stratum": "C"
+  },
+  {
+    "id": "case_C_005",
+    "stratum": "C"
+  },
+  {
+    "id": "case_C_006",
+    "stratum": "C"
+  },
+  {
+    "id": "case_C_007",
+    "stratum": "C"
+  },
+  {
+    "id": "case_C_008",
+    "stratum": "C"
+  },
+  {
+    "id": "case_C_009",
+    "stratum": "C"
+  },
+  {
+    "id": "case_C_010",
+    "stratum": "C"
+  },
+  {
+    "id": "case_C_011",
+    "stratum": "C"
+  },
+  {
+    "id": "case_C_012",
+    "stratum": "C"
+  },
+  {
+    "id": "case_D_001",
+    "stratum": "D"
+  },
+  {
+    "id": "case_D_002",
+    "stratum": "D"
+  },
+  {
+    "id": "case_D_003",
+    "stratum": "D"
+  },
+  {
+    "id": "case_D_004",
+    "stratum": "D"
+  },
+  {
+    "id": "case_D_005",
+    "stratum": "D"
+  },
+  {
+    "id": "case_D_006",
+    "stratum": "D"
+  },
+  {
+    "id": "case_D_007",
+    "stratum": "D"
+  },
+  {
+    "id": "case_D_008",
+    "stratum": "D"
+  },
+  {
+    "id": "case_D_009",
+    "stratum": "D"
+  },
+  {
+    "id": "case_D_010",
+    "stratum": "D"
+  },
+  {
+    "id": "case_D_011",
+    "stratum": "D"
+  },
+  {
+    "id": "case_D_012",
+    "stratum": "D"
+  },
+  {
+    "id": "case_E_001",
+    "stratum": "E"
+  },
+  {
+    "id": "case_E_002",
+    "stratum": "E"
+  },
+  {
+    "id": "case_E_003",
+    "stratum": "E"
+  },
+  {
+    "id": "case_E_004",
+    "stratum": "E"
+  },
+  {
+    "id": "case_E_005",
+    "stratum": "E"
+  },
+  {
+    "id": "case_E_006",
+    "stratum": "E"
+  },
+  {
+    "id": "case_E_007",
+    "stratum": "E"
+  },
+  {
+    "id": "case_E_008",
+    "stratum": "E"
+  },
+  {
+    "id": "case_E_009",
+    "stratum": "E"
+  },
+  {
+    "id": "case_E_010",
+    "stratum": "E"
+  },
+  {
+    "id": "case_E_011",
+    "stratum": "E"
+  },
+  {
+    "id": "case_E_012",
+    "stratum": "E"
+  }
+]

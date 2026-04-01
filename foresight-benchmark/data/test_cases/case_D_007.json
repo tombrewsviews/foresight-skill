@@ -1,0 +1,22 @@
+{
+  "id": "case_D_007",
+  "stratum": "D",
+  "difficulty": "hard",
+  "language": "typescript",
+  "change_type": "schema_change",
+  "description": "Zod schema changes id field from string to UUID type",
+  "before_code": "// schemas.ts\nimport { z } from 'zod';\n\nexport const UserSchema = z.object({\n  id: z.string(),\n  email: z.string().email(),\n  name: z.string().min(1),\n});\n\nexport type User = z.infer<typeof UserSchema>;",
+  "after_code": "// schemas.ts\nimport { z } from 'zod';\n\nexport const UserSchema = z.object({\n  id: z.string().uuid(),  // now validates UUID format\n  email: z.string().email(),\n  name: z.string().min(1),\n});\n\nexport type User = z.infer<typeof UserSchema>;",
+  "diff_summary": "Added .uuid() validator to UserSchema id field",
+  "ground_truth": {
+    "will_break": [],
+    "edge_cases": [
+      "Any test fixtures using simple string IDs like 'user-1' or 'test-id' now fail Zod parsing \u2014 all tests using non-UUID id strings break"
+    ],
+    "broken_pattern": "Tightening validation on an existing schema is a breaking change if existing data uses non-UUID IDs (legacy integer IDs, slug IDs); should verify all data conforms before adding validator",
+    "next_prompt": "All tests are failing with ZodError: Invalid uuid",
+    "verified_by": "git_analogy",
+    "notes": "Adding format validation to existing data requires checking existing data conforms first"
+  },
+  "token_cost_manual_followup": 27
+}

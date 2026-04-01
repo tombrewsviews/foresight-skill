@@ -1,0 +1,24 @@
+{
+  "id": "case_A_008",
+  "stratum": "A",
+  "difficulty": "easy",
+  "language": "typescript",
+  "change_type": "bug_fix",
+  "description": "toggleFeatureFlag uses OR instead of XOR",
+  "before_code": "// feature-flags.ts\nexport function toggleFeatureFlag(flags: Record<string, boolean>, key: string): Record<string, boolean> {\n  return { ...flags, [key]: !flags[key] };\n}",
+  "after_code": "// feature-flags.ts\nexport function toggleFeatureFlag(flags: Record<string, boolean>, key: string): Record<string, boolean> {\n  return { ...flags, [key]: flags[key] || true };\n}",
+  "diff_summary": "toggleFeatureFlag changed from !flags[key] to flags[key] || true",
+  "ground_truth": {
+    "will_break": [
+      "Flags can never be turned off \u2014 flags[key] || true always evaluates to true; toggle is now a 'set to true' operation"
+    ],
+    "edge_cases": [
+      "Undefined/missing key: undefined || true = true \u2014 new flags created as enabled instead of toggled"
+    ],
+    "broken_pattern": "Toggle semantics replaced with forced-enable; any UI that calls toggleFeatureFlag to disable a flag is now broken",
+    "next_prompt": "I can't disable feature flags \u2014 toggling doesn't turn them off",
+    "verified_by": "injected_bug",
+    "notes": "|| true is a common accidental pattern when debugging"
+  },
+  "token_cost_manual_followup": 30
+}

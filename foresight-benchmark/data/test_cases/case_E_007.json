@@ -1,0 +1,22 @@
+{
+  "id": "case_E_007",
+  "stratum": "E",
+  "difficulty": "hard",
+  "language": "python",
+  "change_type": "architecture_shift",
+  "description": "Move logging from application to infrastructure layer loses structured context",
+  "before_code": "# services/payment_service.py\nimport structlog\n\nlogger = structlog.get_logger()\n\ndef process_payment(order_id: str, amount: float, user_id: str) -> PaymentResult:\n    logger.info(\"payment.start\", order_id=order_id, amount=amount, user_id=user_id)\n    result = payment_gateway.charge(amount)\n    if result.success:\n        logger.info(\"payment.success\", order_id=order_id, transaction_id=result.transaction_id)\n    else:\n        logger.error(\"payment.failed\", order_id=order_id, reason=result.error_code)\n    return result",
+  "after_code": "# infrastructure/logging_middleware.py\nimport logging\n\n@app.before_request\ndef log_request():\n    logging.info(f\"{request.method} {request.path}\")\n\n@app.after_request\ndef log_response(response):\n    logging.info(f\"Response: {response.status_code}\")\n    return response\n\n# services/payment_service.py (logging removed)\ndef process_payment(order_id: str, amount: float, user_id: str) -> PaymentResult:\n    result = payment_gateway.charge(amount)\n    return result",
+  "diff_summary": "Moved logging to request/response middleware, removed structured business event logging from payment service",
+  "ground_truth": {
+    "will_break": [],
+    "edge_cases": [
+      "Payment failures now produce only 'Response: 200' log (charge failures may still return 200 with error in body) \u2014 no payment failure alerts possible"
+    ],
+    "broken_pattern": "HTTP-level logging captures what happened at the transport layer; structured business event logging captures why it happened with domain context; they serve different purposes and both are needed",
+    "next_prompt": "We can't tell from logs whether a payment succeeded or failed \u2014 we lost the transaction IDs",
+    "verified_by": "git_analogy",
+    "notes": "Infrastructure logging replaces but cannot substitute for domain event logging"
+  },
+  "token_cost_manual_followup": 37
+}

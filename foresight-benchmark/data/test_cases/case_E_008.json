@@ -1,0 +1,22 @@
+{
+  "id": "case_E_008",
+  "stratum": "E",
+  "difficulty": "hard",
+  "language": "python",
+  "change_type": "architecture_shift",
+  "description": "Move authorization from routes to database queries loses multi-tenant isolation",
+  "before_code": "# routes/documents.py\n@app.route('/documents')\n@require_auth\ndef list_documents():\n    # Route-level: only show docs for current user's organization\n    docs = document_service.get_documents(org_id=g.current_user.org_id)\n    return jsonify(docs)\n\n# services/document_service.py\ndef get_documents(org_id: str) -> list:\n    return db.query(Document).filter_by(org_id=org_id).all()",
+  "after_code": "# routes/documents.py\n@app.route('/documents')\n@require_auth\ndef list_documents():\n    docs = document_service.get_documents(user=g.current_user)\n    return jsonify(docs)\n\n# services/document_service.py\ndef get_documents(user=None, org_id=None) -> list:\n    query = db.query(Document)\n    if user and user.role != 'superadmin':\n        query = query.filter_by(org_id=user.org_id)\n    elif org_id:\n        query = query.filter_by(org_id=org_id)\n    return query.all()",
+  "diff_summary": "Moved org_id filtering from explicit route parameter to conditional logic in get_documents based on user role",
+  "ground_truth": {
+    "will_break": [],
+    "edge_cases": [
+      "If user.role check fails (None, unexpected value), query falls through with no org filter \u2014 returns all documents from all orgs; role string case sensitivity ('Superadmin' vs 'superadmin') bypasses restriction"
+    ],
+    "broken_pattern": "Explicit org_id parameter was safe by default \u2014 caller must supply it; new role-based conditional is secure by exception \u2014 requires correct role check; any code calling get_documents(org_id=None) now returns all documents",
+    "next_prompt": "In testing I'm seeing documents from other organizations appearing in the list",
+    "verified_by": "git_analogy",
+    "notes": "Secure-by-default replaced by secure-by-exception \u2014 multi-tenant isolation at risk"
+  },
+  "token_cost_manual_followup": 34
+}

@@ -1,0 +1,24 @@
+{
+  "id": "case_D_006",
+  "stratum": "D",
+  "difficulty": "hard",
+  "language": "typescript",
+  "change_type": "schema_change",
+  "description": "Enum type adds value breaking exhaustive match in serializer",
+  "before_code": "// order-status.ts\nexport enum OrderStatus {\n  PENDING = 'pending',\n  PROCESSING = 'processing',\n  SHIPPED = 'shipped',\n  DELIVERED = 'delivered',\n  CANCELLED = 'cancelled',\n}\n\n// order-serializer.ts\nexport function getStatusLabel(status: OrderStatus): string {\n  switch (status) {\n    case OrderStatus.PENDING: return 'Pending';\n    case OrderStatus.PROCESSING: return 'Processing';\n    case OrderStatus.SHIPPED: return 'Shipped';\n    case OrderStatus.DELIVERED: return 'Delivered';\n    case OrderStatus.CANCELLED: return 'Cancelled';\n  }\n}",
+  "after_code": "// order-status.ts\nexport enum OrderStatus {\n  PENDING = 'pending',\n  PROCESSING = 'processing',\n  SHIPPED = 'shipped',\n  OUT_FOR_DELIVERY = 'out_for_delivery',  // new\n  DELIVERED = 'delivered',\n  CANCELLED = 'cancelled',\n  REFUNDED = 'refunded',  // new\n}\n\n// order-serializer.ts\nexport function getStatusLabel(status: OrderStatus): string {\n  switch (status) {\n    case OrderStatus.PENDING: return 'Pending';\n    case OrderStatus.PROCESSING: return 'Processing';\n    case OrderStatus.SHIPPED: return 'Shipped';\n    case OrderStatus.DELIVERED: return 'Delivered';\n    case OrderStatus.CANCELLED: return 'Cancelled';\n  }\n}",
+  "diff_summary": "Added OUT_FOR_DELIVERY and REFUNDED values to OrderStatus enum without updating the switch in getStatusLabel",
+  "ground_truth": {
+    "will_break": [
+      "getStatusLabel returns undefined for OUT_FOR_DELIVERY and REFUNDED \u2014 order status UI shows blank label for these orders"
+    ],
+    "edge_cases": [
+      "TypeScript will warn about non-exhaustive switch only if noImplicitReturns is enabled; without it, the bug is silent"
+    ],
+    "broken_pattern": "Every switch on this enum needs updating; no central dispatch table or record type used \u2014 if there were, TS would catch it at compile time",
+    "next_prompt": "Orders with 'out_for_delivery' status are showing a blank status label",
+    "verified_by": "git_analogy",
+    "notes": "Enum expansion with exhaustive switches is a recurring maintenance hazard"
+  },
+  "token_cost_manual_followup": 32
+}

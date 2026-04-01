@@ -1,0 +1,22 @@
+{
+  "id": "case_B_010",
+  "stratum": "B",
+  "difficulty": "medium",
+  "language": "typescript",
+  "change_type": "feature_add",
+  "description": "Added refreshToken that doesn't handle concurrent refresh calls",
+  "before_code": "// auth-service.ts\nexport async function getAccessToken(): Promise<string> {\n  const token = localStorage.getItem('access_token');\n  if (!token) throw new Error('Not authenticated');\n  return token;\n}",
+  "after_code": "// auth-service.ts\nexport async function getAccessToken(): Promise<string> {\n  const token = localStorage.getItem('access_token');\n  if (!token) throw new Error('Not authenticated');\n  return token;\n}\n\nexport async function refreshToken(): Promise<string> {\n  const refresh = localStorage.getItem('refresh_token');\n  const res = await fetch('/api/auth/refresh', {\n    method: 'POST',\n    body: JSON.stringify({ refresh_token: refresh }),\n    headers: { 'Content-Type': 'application/json' }\n  });\n  const { access_token } = await res.json();\n  localStorage.setItem('access_token', access_token);\n  return access_token;\n}",
+  "diff_summary": "Added refreshToken function that exchanges refresh token for new access token",
+  "ground_truth": {
+    "will_break": [],
+    "edge_cases": [
+      "Concurrent requests all calling refreshToken simultaneously send multiple refresh requests \u2014 race condition can invalidate tokens; no singleton promise guard"
+    ],
+    "broken_pattern": "No check for res.ok \u2014 failed refresh returns undefined access_token stored as 'undefined' string; no clearing of invalid refresh token on 401",
+    "next_prompt": "After token expiry, multiple simultaneous requests cause a 401 storm",
+    "verified_by": "git_analogy",
+    "notes": "Token refresh without mutex/singleton is a well-known race condition"
+  },
+  "token_cost_manual_followup": 32
+}

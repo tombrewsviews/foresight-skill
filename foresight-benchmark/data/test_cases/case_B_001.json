@@ -1,0 +1,22 @@
+{
+  "id": "case_B_001",
+  "stratum": "B",
+  "difficulty": "medium",
+  "language": "typescript",
+  "change_type": "feature_add",
+  "description": "Added fetchUserProfile async function without error handling",
+  "before_code": "// api-client.ts\nconst BASE_URL = process.env.API_BASE_URL;\n\nexport async function fetchPosts(userId: string): Promise<Post[]> {\n  const res = await fetch(`${BASE_URL}/users/${userId}/posts`);\n  if (!res.ok) throw new Error(`Failed to fetch posts: ${res.status}`);\n  return res.json();\n}",
+  "after_code": "// api-client.ts\nconst BASE_URL = process.env.API_BASE_URL;\n\nexport async function fetchPosts(userId: string): Promise<Post[]> {\n  const res = await fetch(`${BASE_URL}/users/${userId}/posts`);\n  if (!res.ok) throw new Error(`Failed to fetch posts: ${res.status}`);\n  return res.json();\n}\n\nexport async function fetchUserProfile(userId: string): Promise<UserProfile> {\n  const res = await fetch(`${BASE_URL}/users/${userId}/profile`);\n  return res.json();\n}",
+  "diff_summary": "Added fetchUserProfile async function that fetches user profile but has no error handling for non-OK responses",
+  "ground_truth": {
+    "will_break": [],
+    "edge_cases": [
+      "Non-OK HTTP response (404, 500) calls .json() on error body \u2014 may throw or return error payload typed as UserProfile; callers won't see the HTTP status"
+    ],
+    "broken_pattern": "fetchUserProfile skips the res.ok check that fetchPosts has \u2014 inconsistent error handling pattern in same file",
+    "next_prompt": "Profile page crashes on 404 users instead of showing a not-found state",
+    "verified_by": "git_analogy",
+    "notes": "Newly added function missing the established error-handling pattern"
+  },
+  "token_cost_manual_followup": 32
+}

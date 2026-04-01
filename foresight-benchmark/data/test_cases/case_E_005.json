@@ -1,0 +1,22 @@
+{
+  "id": "case_E_005",
+  "stratum": "E",
+  "difficulty": "hard",
+  "language": "python",
+  "change_type": "architecture_shift",
+  "description": "Move email sending from synchronous to async queue loses delivery confirmation",
+  "before_code": "# services/order_service.py\ndef place_order(user_id: str, items: list) -> Order:\n    order = create_order_in_db(user_id, items)\n    charge_payment(order)\n    send_order_confirmation_email(order)  # synchronous\n    return order  # caller knows email was sent or raises",
+  "after_code": "# services/order_service.py\nfrom tasks import send_email_task\n\ndef place_order(user_id: str, items: list) -> Order:\n    order = create_order_in_db(user_id, items)\n    charge_payment(order)\n    send_email_task.delay(order.id)  # fire and forget\n    return order",
+  "diff_summary": "Changed order confirmation email from synchronous send to async Celery task",
+  "ground_truth": {
+    "will_break": [],
+    "edge_cases": [
+      "If Celery worker is down, emails are silently dropped \u2014 no fallback; if payment succeeds but Celery broker is unavailable, task is lost; no retry configuration shown"
+    ],
+    "broken_pattern": "fire-and-forget without dead letter queue or retry policy; place_order no longer raises on email failure \u2014 callers that checked for exceptions from email errors now silently succeed without email",
+    "next_prompt": "Some customers aren't receiving order confirmation emails \u2014 is the email queue working?",
+    "verified_by": "git_analogy",
+    "notes": "Async email without dead letter queue is a silent failure pattern"
+  },
+  "token_cost_manual_followup": 36
+}

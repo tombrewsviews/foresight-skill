@@ -1,0 +1,22 @@
+{
+  "id": "case_C_011",
+  "stratum": "C",
+  "difficulty": "medium",
+  "language": "python",
+  "change_type": "refactor",
+  "description": "Extract build_query utility introduces SQL injection via f-string",
+  "before_code": "# search.py\nimport psycopg2\n\ndef search_products(name: str, category: str, max_price: float) -> list:\n    query = \"SELECT * FROM products WHERE 1=1\"\n    params = []\n    if name:\n        query += \" AND name ILIKE %s\"\n        params.append(f\"%{name}%\")\n    if category:\n        query += \" AND category = %s\"\n        params.append(category)\n    if max_price:\n        query += \" AND price <= %s\"\n        params.append(max_price)\n    return db.execute(query, params)",
+  "after_code": "# query_utils.py\ndef build_query(table: str, filters: dict) -> str:\n    conditions = \" AND \".join(f\"{k} = '{v}'\" for k, v in filters.items())\n    return f\"SELECT * FROM {table} WHERE {conditions}\"\n\n# search.py\nfrom query_utils import build_query\n\ndef search_products(name: str, category: str, max_price: float) -> list:\n    filters = {}\n    if name: filters['name'] = name\n    if category: filters['category'] = category\n    if max_price: filters['price'] = max_price\n    query = build_query('products', filters)\n    return db.execute(query)",
+  "diff_summary": "Extracted query builder utility that uses f-strings to construct SQL from user inputs",
+  "ground_truth": {
+    "will_break": [],
+    "edge_cases": [
+      "Direct SQL injection via name/category/max_price \u2014 build_query interpolates values directly into SQL string; name=\"'; DROP TABLE products;--\" works"
+    ],
+    "broken_pattern": "Original used parameterized queries (correct); replacement uses string interpolation (SQL injection vulnerability); ILIKE search (partial match) replaced with = (exact match) \u2014 search now broken",
+    "next_prompt": "Product search is only finding exact name matches instead of partial matches",
+    "verified_by": "git_analogy",
+    "notes": "Introduced SQL injection while refactoring \u2014 parameterized queries replaced with string interpolation"
+  },
+  "token_cost_manual_followup": 34
+}

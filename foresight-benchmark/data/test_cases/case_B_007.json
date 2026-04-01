@@ -1,0 +1,22 @@
+{
+  "id": "case_B_007",
+  "stratum": "B",
+  "difficulty": "medium",
+  "language": "typescript",
+  "change_type": "feature_add",
+  "description": "Added uploadFile that doesn't validate file type or size",
+  "before_code": "// file-service.ts\nexport async function deleteFile(fileId: string, userId: string): Promise<void> {\n  const file = await db.files.findOne({ id: fileId });\n  if (file.ownerId !== userId) throw new Error('Unauthorized');\n  await storage.delete(file.storageKey);\n  await db.files.delete({ id: fileId });\n}",
+  "after_code": "// file-service.ts\nexport async function deleteFile(fileId: string, userId: string): Promise<void> {\n  const file = await db.files.findOne({ id: fileId });\n  if (file.ownerId !== userId) throw new Error('Unauthorized');\n  await storage.delete(file.storageKey);\n  await db.files.delete({ id: fileId });\n}\n\nexport async function uploadFile(file: File, userId: string): Promise<string> {\n  const key = `users/${userId}/${Date.now()}-${file.name}`;\n  await storage.put(key, file);\n  await db.files.create({ ownerId: userId, storageKey: key, name: file.name });\n  return key;\n}",
+  "diff_summary": "Added uploadFile function that stores files to cloud storage without type or size validation",
+  "ground_truth": {
+    "will_break": [],
+    "edge_cases": [
+      "No file size limit \u2014 users can upload arbitrarily large files; no MIME type check \u2014 executable files (.exe, .sh, .php) can be uploaded and served"
+    ],
+    "broken_pattern": "deleteFile has authorization check; uploadFile has none \u2014 only checks userId is provided, not that it's the authenticated user; no rate limiting",
+    "next_prompt": "Can we add a file size limit and restrict to image/document types?",
+    "verified_by": "git_analogy",
+    "notes": "Upload endpoint without validation is a common security gap"
+  },
+  "token_cost_manual_followup": 31
+}

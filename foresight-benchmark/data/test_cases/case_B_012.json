@@ -1,0 +1,22 @@
+{
+  "id": "case_B_012",
+  "stratum": "B",
+  "difficulty": "medium",
+  "language": "typescript",
+  "change_type": "feature_add",
+  "description": "Added sendNotification with no rate limiting",
+  "before_code": "// notification-service.ts\nexport async function getNotificationPrefs(userId: string): Promise<NotificationPrefs> {\n  return db.notificationPrefs.findOne({ userId });\n}",
+  "after_code": "// notification-service.ts\nexport async function getNotificationPrefs(userId: string): Promise<NotificationPrefs> {\n  return db.notificationPrefs.findOne({ userId });\n}\n\nexport async function sendNotification(userId: string, message: string, channel: 'email' | 'sms' | 'push'): Promise<void> {\n  const prefs = await getNotificationPrefs(userId);\n  if (!prefs[channel]) return;\n  await notificationProvider.send({ userId, message, channel });\n  await db.notifications.create({ userId, message, channel, sentAt: new Date() });\n}",
+  "diff_summary": "Added sendNotification that respects user preferences and sends via specified channel",
+  "ground_truth": {
+    "will_break": [],
+    "edge_cases": [
+      "No rate limiting \u2014 a bug or loop in calling code could spam users with thousands of notifications; no deduplication of identical messages sent close together"
+    ],
+    "broken_pattern": "No idempotency key or deduplication check; notification logging happens after send \u2014 if send succeeds but db.create fails, no audit trail",
+    "next_prompt": "Can you add rate limiting so users don't get flooded with notifications?",
+    "verified_by": "git_analogy",
+    "notes": "Notification services need rate limiting as a baseline"
+  },
+  "token_cost_manual_followup": 33
+}

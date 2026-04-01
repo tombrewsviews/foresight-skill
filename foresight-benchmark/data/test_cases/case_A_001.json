@@ -1,0 +1,24 @@
+{
+  "id": "case_A_001",
+  "stratum": "A",
+  "difficulty": "easy",
+  "language": "typescript",
+  "change_type": "bug_fix",
+  "description": "getUserAge returns string instead of number",
+  "before_code": "// user-utils.ts\nexport interface User {\n  id: string;\n  name: string;\n  birthYear: number;\n}\n\nexport function getUserAge(user: User): number {\n  return new Date().getFullYear() - user.birthYear;\n}\n\nexport function canVote(user: User): boolean {\n  return getUserAge(user) >= 18;\n}",
+  "after_code": "// user-utils.ts\nexport interface User {\n  id: string;\n  name: string;\n  birthYear: number;\n}\n\nexport function getUserAge(user: User): string {\n  return String(new Date().getFullYear() - user.birthYear);\n}\n\nexport function canVote(user: User): boolean {\n  return getUserAge(user) >= 18;\n}",
+  "diff_summary": "Changed getUserAge return type from number to string",
+  "ground_truth": {
+    "will_break": [
+      "canVote() compares string >= 18 \u2014 always false in strict mode, TS error on comparison"
+    ],
+    "edge_cases": [
+      "String comparison '9' >= '18' returns true due to lexicographic ordering"
+    ],
+    "broken_pattern": "getUserAge previously returned a number like all other numeric utility functions; now returns string inconsistently",
+    "next_prompt": "Why is canVote always returning false even for users over 18?",
+    "verified_by": "injected_bug",
+    "notes": "String-to-number comparison bug injected deliberately"
+  },
+  "token_cost_manual_followup": 30
+}

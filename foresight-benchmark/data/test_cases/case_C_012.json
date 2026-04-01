@@ -1,0 +1,24 @@
+{
+  "id": "case_C_012",
+  "stratum": "C",
+  "difficulty": "medium",
+  "language": "python",
+  "change_type": "refactor",
+  "description": "Extract serialize_user drops password hash from output but also drops required fields",
+  "before_code": "# api/users.py\ndef get_user_response(user: dict) -> dict:\n    return {\n        \"id\": user[\"id\"],\n        \"email\": user[\"email\"],\n        \"name\": user[\"name\"],\n        \"role\": user[\"role\"],\n        \"created_at\": user[\"created_at\"].isoformat(),\n        # deliberately exclude: password_hash, reset_token, internal_flags\n    }",
+  "after_code": "# serializers.py\nSAFE_FIELDS = ['id', 'email', 'name']\n\ndef serialize_user(user: dict) -> dict:\n    return {k: user[k] for k in SAFE_FIELDS if k in user}\n\n# api/users.py\nfrom serializers import serialize_user\n\ndef get_user_response(user: dict) -> dict:\n    return serialize_user(user)",
+  "diff_summary": "Extracted serialize_user utility using a SAFE_FIELDS allowlist that excludes sensitive fields",
+  "ground_truth": {
+    "will_break": [
+      "API responses missing role and created_at fields \u2014 frontend components that depend on user.role for permission checks will fail; role-based UI will break"
+    ],
+    "edge_cases": [
+      "created_at no longer .isoformat() \u2014 if frontend receives datetime object (non-serializable), JSON serialization throws"
+    ],
+    "broken_pattern": "SAFE_FIELDS allowlist is more restrictive than original \u2014 omitted role and created_at which are needed by frontend; original explicitly commented which fields to exclude",
+    "next_prompt": "The frontend is throwing errors about user.role being undefined",
+    "verified_by": "git_analogy",
+    "notes": "Over-aggressive field filtering broke required API contract fields"
+  },
+  "token_cost_manual_followup": 30
+}

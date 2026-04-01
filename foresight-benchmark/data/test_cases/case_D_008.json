@@ -1,0 +1,24 @@
+{
+  "id": "case_D_008",
+  "stratum": "D",
+  "difficulty": "hard",
+  "language": "typescript",
+  "change_type": "schema_change",
+  "description": "API response schema renames data field to result breaking all consumers",
+  "before_code": "// api-response.ts\nexport interface ListResponse<T> {\n  data: T[];\n  total: number;\n  page: number;\n}\n\n// users-api.ts\nexport async function listUsers(page: number): Promise<ListResponse<User>> {\n  const res = await fetch(`/api/users?page=${page}`);\n  return res.json();\n}",
+  "after_code": "// api-response.ts\nexport interface ListResponse<T> {\n  result: T[];  // renamed from 'data'\n  total: number;\n  page: number;\n}\n\n// users-api.ts\nexport async function listUsers(page: number): Promise<ListResponse<User>> {\n  const res = await fetch(`/api/users?page=${page}`);\n  return res.json();\n}",
+  "diff_summary": "Renamed 'data' field to 'result' in ListResponse interface",
+  "ground_truth": {
+    "will_break": [
+      "All frontend code accessing response.data from ListResponse now gets undefined \u2014 TypeScript catches this at compile time but only if running tsc; runtime would silently return undefined"
+    ],
+    "edge_cases": [
+      "If server still returns {data: [...]} but client type expects {result: [...]}, TypeScript compiles fine but runtime fails"
+    ],
+    "broken_pattern": "Renaming a field in a shared API response type is a breaking API contract change \u2014 requires versioning or a deprecation period with both fields present",
+    "next_prompt": "All list views are showing empty \u2014 response.data is undefined",
+    "verified_by": "git_analogy",
+    "notes": "Field rename in shared type is a classic breaking change"
+  },
+  "token_cost_manual_followup": 30
+}

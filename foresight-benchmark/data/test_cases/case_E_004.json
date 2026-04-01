@@ -1,0 +1,22 @@
+{
+  "id": "case_E_004",
+  "stratum": "E",
+  "difficulty": "hard",
+  "language": "python",
+  "change_type": "architecture_shift",
+  "description": "Move caching from repository to controller layer causes cache bypass",
+  "before_code": "# repositories/product_repo.py\nclass ProductRepository:\n    def find_by_id(self, product_id: str) -> Optional[Product]:\n        cached = redis.get(f\"product:{product_id}\")\n        if cached:\n            return Product(**json.loads(cached))\n        product = db.query(Product).filter_by(id=product_id).first()\n        if product:\n            redis.setex(f\"product:{product_id}\", 300, json.dumps(product.to_dict()))\n        return product",
+  "after_code": "# controllers/product_controller.py\nclass ProductController:\n    def get_product(self, product_id: str) -> Optional[dict]:\n        cached = redis.get(f\"product:{product_id}\")\n        if cached:\n            return json.loads(cached)\n        product = self.product_repo.find_by_id(product_id)\n        if product:\n            redis.setex(f\"product:{product_id}\", 300, json.dumps(product.to_dict()))\n        return product.to_dict() if product else None\n\n# repositories/product_repo.py\nclass ProductRepository:\n    def find_by_id(self, product_id: str) -> Optional[Product]:\n        return db.query(Product).filter_by(id=product_id).first()",
+  "diff_summary": "Moved Redis caching logic from ProductRepository into ProductController",
+  "ground_truth": {
+    "will_break": [],
+    "edge_cases": [
+      "Any other code calling product_repo.find_by_id() directly (other controllers, services, background jobs) now bypasses the cache \u2014 cache hit rate drops; cache invalidation logic needs to be added to controller too"
+    ],
+    "broken_pattern": "Cache placed in controller means every access path that doesn't go through this controller misses the cache; repository was the single point for cache management \u2014 now cache logic must be duplicated everywhere product_repo is used",
+    "next_prompt": "Database query load went up after the refactor \u2014 it seems like some calls are bypassing the cache",
+    "verified_by": "git_analogy",
+    "notes": "Moving cache from repository to controller breaks the single cache invalidation point"
+  },
+  "token_cost_manual_followup": 39
+}

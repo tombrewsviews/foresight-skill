@@ -1,0 +1,22 @@
+{
+  "id": "case_C_003",
+  "stratum": "C",
+  "difficulty": "medium",
+  "language": "python",
+  "change_type": "refactor",
+  "description": "Extract get_db_connection into shared utility breaks connection pooling",
+  "before_code": "# users.py\nimport psycopg2\n\ndef get_user(user_id: str):\n    conn = psycopg2.connect(dsn=os.environ['DATABASE_URL'])\n    cursor = conn.cursor()\n    cursor.execute(\"SELECT * FROM users WHERE id = %s\", (user_id,))\n    result = cursor.fetchone()\n    conn.close()\n    return result\n\n# posts.py\nimport psycopg2\n\ndef get_post(post_id: str):\n    conn = psycopg2.connect(dsn=os.environ['DATABASE_URL'])\n    cursor = conn.cursor()\n    cursor.execute(\"SELECT * FROM posts WHERE id = %s\", (post_id,))\n    result = cursor.fetchone()\n    conn.close()\n    return result",
+  "after_code": "# db.py\nimport psycopg2\n\n_conn = None\n\ndef get_db_connection():\n    global _conn\n    if _conn is None:\n        _conn = psycopg2.connect(dsn=os.environ['DATABASE_URL'])\n    return _conn\n\n# users.py\nfrom db import get_db_connection\n\ndef get_user(user_id: str):\n    conn = get_db_connection()\n    cursor = conn.cursor()\n    cursor.execute(\"SELECT * FROM users WHERE id = %s\", (user_id,))\n    return cursor.fetchone()\n\n# posts.py\nfrom db import get_db_connection\n\ndef get_post(post_id: str):\n    conn = get_db_connection()\n    cursor = conn.cursor()\n    cursor.execute(\"SELECT * FROM posts WHERE id = %s\", (post_id,))\n    return cursor.fetchone()",
+  "diff_summary": "Extracted database connection into singleton get_db_connection in db.py to avoid duplication",
+  "ground_truth": {
+    "will_break": [],
+    "edge_cases": [
+      "Singleton connection is not thread-safe \u2014 concurrent requests share one connection; if connection drops, _conn stays set to closed connection; no reconnection logic"
+    ],
+    "broken_pattern": "Original code opened and closed connections per-request (correct for high concurrency); new singleton reuses one connection (wrong \u2014 should use a connection pool like psycopg2.pool)",
+    "next_prompt": "Getting 'connection is closed' errors under load",
+    "verified_by": "git_analogy",
+    "notes": "Singleton DB connection is a common refactoring mistake \u2014 breaks thread safety"
+  },
+  "token_cost_manual_followup": 27
+}

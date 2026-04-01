@@ -1,0 +1,22 @@
+{
+  "id": "case_B_003",
+  "stratum": "B",
+  "difficulty": "medium",
+  "language": "typescript",
+  "change_type": "feature_add",
+  "description": "Added sendWelcomeEmail that fires on every profile update",
+  "before_code": "// user-service.ts\nexport async function updateUserProfile(userId: string, data: Partial<UserProfile>): Promise<UserProfile> {\n  const updated = await db.users.update({ id: userId }, data);\n  return updated;\n}",
+  "after_code": "// user-service.ts\nimport { sendWelcomeEmail } from './email-service';\n\nexport async function updateUserProfile(userId: string, data: Partial<UserProfile>): Promise<UserProfile> {\n  const updated = await db.users.update({ id: userId }, data);\n  await sendWelcomeEmail(updated.email, updated.name);\n  return updated;\n}",
+  "diff_summary": "updateUserProfile now sends a welcome email after every profile update",
+  "ground_truth": {
+    "will_break": [],
+    "edge_cases": [
+      "Users receive welcome email every time they update their profile \u2014 spam regression; email sending failure now breaks profile updates (not isolated)"
+    ],
+    "broken_pattern": "Welcome email logic belongs in the signup/onboarding flow, not in updateUserProfile; side effect added to a generic update function",
+    "next_prompt": "Users are getting welcome emails every time they save their profile settings",
+    "verified_by": "git_analogy",
+    "notes": "Logic placed in wrong layer \u2014 welcome email should only fire on account creation"
+  },
+  "token_cost_manual_followup": 34
+}

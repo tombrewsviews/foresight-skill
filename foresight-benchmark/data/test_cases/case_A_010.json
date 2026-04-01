@@ -1,0 +1,24 @@
+{
+  "id": "case_A_010",
+  "stratum": "A",
+  "difficulty": "easy",
+  "language": "typescript",
+  "change_type": "bug_fix",
+  "description": "authenticate compares passwords with == instead of bcrypt",
+  "before_code": "// auth.ts\nimport bcrypt from 'bcrypt';\n\nexport async function authenticate(inputPassword: string, hashedPassword: string): Promise<boolean> {\n  return bcrypt.compare(inputPassword, hashedPassword);\n}",
+  "after_code": "// auth.ts\nexport async function authenticate(inputPassword: string, hashedPassword: string): Promise<boolean> {\n  return inputPassword == hashedPassword;\n}",
+  "diff_summary": "authenticate replaced bcrypt.compare with loose equality comparison",
+  "ground_truth": {
+    "will_break": [
+      "All login attempts fail \u2014 hashed passwords never equal plaintext; users locked out"
+    ],
+    "edge_cases": [
+      "If hashedPassword is somehow plain text (test/seed data), login works \u2014 masking the bug in dev environments"
+    ],
+    "broken_pattern": "Removed cryptographic comparison; security regression \u2014 plaintext comparison exposes timing attack surface and bypasses hashing entirely",
+    "next_prompt": "No one can log in \u2014 authentication is broken for all users",
+    "verified_by": "injected_bug",
+    "notes": "Critical security regression injected deliberately"
+  },
+  "token_cost_manual_followup": 29
+}

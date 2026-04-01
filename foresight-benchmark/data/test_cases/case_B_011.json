@@ -1,0 +1,22 @@
+{
+  "id": "case_B_011",
+  "stratum": "B",
+  "difficulty": "medium",
+  "language": "typescript",
+  "change_type": "feature_add",
+  "description": "Added filterByPermission that uses client-side role check",
+  "before_code": "// data-service.ts\nexport async function getDocuments(orgId: string): Promise<Document[]> {\n  return db.documents.find({ orgId });\n}",
+  "after_code": "// data-service.ts\nexport async function getDocuments(orgId: string): Promise<Document[]> {\n  return db.documents.find({ orgId });\n}\n\nexport function filterByPermission(docs: Document[], userRole: string): Document[] {\n  if (userRole === 'admin') return docs;\n  return docs.filter(doc => doc.visibility === 'public');\n}",
+  "diff_summary": "Added filterByPermission function that filters documents client-side based on user role",
+  "ground_truth": {
+    "will_break": [],
+    "edge_cases": [
+      "getDocuments still returns all documents including private ones \u2014 filtering happens after full data is fetched; malicious client can bypass filter"
+    ],
+    "broken_pattern": "Permission filtering should happen in the database query (server-side), not after fetching all data; role string comparison is fragile (case sensitivity, typos)",
+    "next_prompt": "Can we move the permission check to the database query so we don't over-fetch?",
+    "verified_by": "git_analogy",
+    "notes": "Client-side security filtering is a security anti-pattern"
+  },
+  "token_cost_manual_followup": 34
+}

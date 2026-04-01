@@ -1,0 +1,15 @@
+{
+  "model": "claude-sonnet-4-6",
+  "baseline_temperature": 0.2,
+  "skill_temperature": 0.2,
+  "judge_temperature": 0.0,
+  "runs_per_case": 3,
+  "total_cases": 60,
+  "similarity_threshold_will_break": 0.75,
+  "similarity_threshold_next_prompt": 0.40,
+  "bootstrap_resamples": 1000,
+  "significance_threshold": 0.05,
+  "foresight_max_words": 120,
+  "strata": ["A", "B", "C", "D", "E"],
+  "difficulties": ["easy", "medium", "hard"]
+}

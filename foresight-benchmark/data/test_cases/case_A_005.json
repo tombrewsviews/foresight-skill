@@ -1,0 +1,24 @@
+{
+  "id": "case_A_005",
+  "stratum": "A",
+  "difficulty": "easy",
+  "language": "typescript",
+  "change_type": "bug_fix",
+  "description": "parseDate returns Invalid Date for valid ISO strings",
+  "before_code": "// date-utils.ts\nexport function parseDate(input: string): Date {\n  return new Date(input);\n}\n\nexport function isExpired(isoDate: string): boolean {\n  const date = parseDate(isoDate);\n  return date.getTime() < Date.now();\n}",
+  "after_code": "// date-utils.ts\nexport function parseDate(input: string): Date {\n  const [year, month, day] = input.split('-').map(Number);\n  return new Date(year, month, day);\n}\n\nexport function isExpired(isoDate: string): boolean {\n  const date = parseDate(isoDate);\n  return date.getTime() < Date.now();\n}",
+  "diff_summary": "parseDate changed from new Date(input) to manual year/month/day split",
+  "ground_truth": {
+    "will_break": [
+      "Month is 1-indexed in ISO but 0-indexed in new Date(year, month, day) \u2014 all dates off by one month; isExpired returns wrong results"
+    ],
+    "edge_cases": [
+      "Input with time component (e.g. '2024-01-15T10:00:00Z') loses time info; datetime comparisons wrong"
+    ],
+    "broken_pattern": "Replaced a standard Date constructor with manual parsing that has known gotchas (month indexing); doesn't match rest of codebase",
+    "next_prompt": "Subscription expiry checks are failing \u2014 expired subscriptions showing as active",
+    "verified_by": "injected_bug",
+    "notes": "month indexing off-by-one is a classic JS Date trap"
+  },
+  "token_cost_manual_followup": 35
+}

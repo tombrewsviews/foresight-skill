@@ -1,0 +1,24 @@
+{
+  "id": "case_D_003",
+  "stratum": "D",
+  "difficulty": "hard",
+  "language": "typescript",
+  "change_type": "schema_change",
+  "description": "Event payload type narrows string to literal union breaking existing emitters",
+  "before_code": "// events.ts\nexport interface UserEvent {\n  type: string;\n  userId: string;\n  timestamp: number;\n  metadata?: Record<string, unknown>;\n}\n\n// emitter.ts\nexport function emitUserEvent(event: UserEvent): void {\n  eventBus.emit('user', event);\n}",
+  "after_code": "// events.ts\nexport type UserEventType = 'login' | 'logout' | 'profile_update' | 'password_change';\n\nexport interface UserEvent {\n  type: UserEventType;\n  userId: string;\n  timestamp: number;\n  metadata?: Record<string, unknown>;\n}\n\n// emitter.ts\nexport function emitUserEvent(event: UserEvent): void {\n  eventBus.emit('user', event);\n}",
+  "diff_summary": "Narrowed UserEvent.type from string to a UserEventType literal union",
+  "ground_truth": {
+    "will_break": [
+      "Any caller emitting custom event types (e.g. 'email_verified', 'subscription_renewed') now gets TS error \u2014 they're not in the literal union"
+    ],
+    "edge_cases": [
+      "Runtime emitters using dynamic string event types (from external config, webhook payloads) will fail TS compilation even though runtime behavior is the same"
+    ],
+    "broken_pattern": "Narrowing a public interface type from string to literal union is a breaking change for all emitters using custom event types; needs a major version bump or 'string &' escape hatch",
+    "next_prompt": "TS errors on our custom event types \u2014 they're not in UserEventType",
+    "verified_by": "git_analogy",
+    "notes": "Type narrowing as a breaking change \u2014 common in schema evolution"
+  },
+  "token_cost_manual_followup": 31
+}

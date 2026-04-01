@@ -1,0 +1,24 @@
+{
+  "id": "case_D_001",
+  "stratum": "D",
+  "difficulty": "hard",
+  "language": "typescript",
+  "change_type": "schema_change",
+  "description": "UserProfile type adds required field breaking all partial update callers",
+  "before_code": "// types.ts\nexport interface UserProfile {\n  id: string;\n  displayName: string;\n  bio?: string;\n  avatarUrl?: string;\n}\n\n// profile-service.ts\nexport async function updateProfile(userId: string, updates: Partial<UserProfile>): Promise<UserProfile> {\n  return db.profiles.update({ id: userId }, updates);\n}\n\n// profile-form.tsx\nexport function ProfileForm({ profile }: { profile: UserProfile }) {\n  const [name, setName] = useState(profile.displayName);\n  // ...\n}",
+  "after_code": "// types.ts\nexport interface UserProfile {\n  id: string;\n  displayName: string;\n  bio?: string;\n  avatarUrl?: string;\n  lastActiveAt: Date;  // new required field\n}\n\n// profile-service.ts\nexport async function updateProfile(userId: string, updates: Partial<UserProfile>): Promise<UserProfile> {\n  return db.profiles.update({ id: userId }, updates);\n}\n\n// profile-form.tsx\nexport function ProfileForm({ profile }: { profile: UserProfile }) {\n  const [name, setName] = useState(profile.displayName);\n  // ...\n}",
+  "diff_summary": "Added required lastActiveAt: Date field to UserProfile interface",
+  "ground_truth": {
+    "will_break": [
+      "Any code constructing a full UserProfile object (not Partial) will get TS error for missing lastActiveAt; existing DB rows without this column will fail to deserialize at runtime"
+    ],
+    "edge_cases": [
+      "Date vs string: if DB returns ISO string, TypeScript type says Date \u2014 runtime type mismatch; JSON.parse gives string, not Date object"
+    ],
+    "broken_pattern": "Adding a required field to an existing interface without a migration \u2014 should be optional (lastActiveAt?: Date) until all rows are backfilled",
+    "next_prompt": "TypeScript errors everywhere saying 'Property lastActiveAt is missing in type'",
+    "verified_by": "git_analogy",
+    "notes": "Required field addition to interface is a breaking change requiring careful migration"
+  },
+  "token_cost_manual_followup": 34
+}

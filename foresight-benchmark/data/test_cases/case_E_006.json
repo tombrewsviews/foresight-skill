@@ -1,0 +1,22 @@
+{
+  "id": "case_E_006",
+  "stratum": "E",
+  "difficulty": "hard",
+  "language": "python",
+  "change_type": "architecture_shift",
+  "description": "Move rate limiting from nginx to application layer misses some entry points",
+  "before_code": "# nginx.conf (removed)\n# limit_req_zone $binary_remote_addr zone=api:10m rate=100r/m;\n# limit_req zone=api burst=20;\n\n# All requests rate-limited at nginx level",
+  "after_code": "# middleware/rate_limiter.py\nfrom functools import wraps\nimport redis\n\ndef rate_limit(max_requests=100, window=60):\n    def decorator(f):\n        @wraps(f)\n        def wrapper(*args, **kwargs):\n            key = f\"rate:{request.remote_addr}:{f.__name__}\"\n            count = redis.incr(key)\n            if count == 1:\n                redis.expire(key, window)\n            if count > max_requests:\n                return jsonify({'error': 'Rate limit exceeded'}), 429\n            return f(*args, **kwargs)\n        return wrapper\n    return decorator\n\n# routes/api.py - only applied to some routes\n@app.route('/api/search')\n@rate_limit()\ndef search(): ...\n\n@app.route('/api/login')  # missing @rate_limit \u2014 login not rate limited!\ndef login(): ...",
+  "diff_summary": "Moved rate limiting from nginx to Python application middleware, applied manually per-route",
+  "ground_truth": {
+    "will_break": [],
+    "edge_cases": [
+      "Login endpoint has no rate limiting \u2014 brute force attacks now possible; health check, metrics, and any internal endpoints also unprotected"
+    ],
+    "broken_pattern": "Nginx rate limiting applied universally to all routes; application-level requires opt-in per route \u2014 any new route added is unprotected by default; request.remote_addr can be spoofed via X-Forwarded-For",
+    "next_prompt": "We need to add rate limiting to the login endpoint \u2014 brute force protection is missing",
+    "verified_by": "git_analogy",
+    "notes": "Moving from infrastructure to application-level security requires opt-in which creates gaps"
+  },
+  "token_cost_manual_followup": 36
+}

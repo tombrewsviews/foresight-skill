@@ -1,0 +1,24 @@
+{
+  "id": "case_E_011",
+  "stratum": "E",
+  "difficulty": "hard",
+  "language": "python",
+  "change_type": "architecture_shift",
+  "description": "Move error handling from individual services to global handler swallows specific errors",
+  "before_code": "# services/inventory_service.py\nclass InsufficientStockError(Exception):\n    def __init__(self, product_id: str, requested: int, available: int):\n        self.product_id = product_id\n        self.requested = requested\n        self.available = available\n\ndef reserve_inventory(product_id: str, quantity: int) -> None:\n    stock = get_stock(product_id)\n    if stock < quantity:\n        raise InsufficientStockError(product_id, quantity, stock)\n    # ... reserve\n\n# routes/orders.py\n@app.route('/orders', methods=['POST'])\ndef create_order():\n    try:\n        reserve_inventory(product_id, qty)\n        return jsonify(order), 201\n    except InsufficientStockError as e:\n        return jsonify({'error': 'insufficient_stock', 'available': e.available}), 409",
+  "after_code": "# middleware/error_handler.py\n@app.errorhandler(Exception)\ndef handle_error(e):\n    return jsonify({'error': str(e)}), 500\n\n# routes/orders.py (try/except removed)\n@app.route('/orders', methods=['POST'])\ndef create_order():\n    reserve_inventory(product_id, qty)\n    return jsonify(order), 201",
+  "diff_summary": "Replaced per-route error handling with global exception handler middleware",
+  "ground_truth": {
+    "will_break": [
+      "InsufficientStockError now returns 500 instead of 409 \u2014 frontend cannot distinguish 'out of stock' from 'server error'; available stock quantity no longer in response"
+    ],
+    "edge_cases": [
+      "str(InsufficientStockError) leaks internal details (product_id, quantities) in the 500 response; any exception now returns 500 \u2014 including validation errors that should be 422"
+    ],
+    "broken_pattern": "Global catch-all handler is good as a safety net but should not replace specific error handling; different exception types need different HTTP status codes and response shapes",
+    "next_prompt": "The add-to-cart flow is getting a 500 error instead of showing 'out of stock' \u2014 what happened?",
+    "verified_by": "git_analogy",
+    "notes": "Global error handler replacing specific handlers loses HTTP semantic meaning"
+  },
+  "token_cost_manual_followup": 38
+}

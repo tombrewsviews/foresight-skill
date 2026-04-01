@@ -1,0 +1,24 @@
+{
+  "id": "case_D_002",
+  "stratum": "D",
+  "difficulty": "hard",
+  "language": "typescript",
+  "change_type": "schema_change",
+  "description": "API response type discriminated union changes break switch exhaustiveness",
+  "before_code": "// api-types.ts\nexport type ApiResponse<T> =\n  | { status: 'success'; data: T }\n  | { status: 'error'; message: string };\n\n// handlers.ts\nfunction handleResponse<T>(res: ApiResponse<T>): T {\n  if (res.status === 'success') return res.data;\n  throw new Error(res.message);\n}",
+  "after_code": "// api-types.ts\nexport type ApiResponse<T> =\n  | { status: 'success'; data: T }\n  | { status: 'error'; message: string; code: number }\n  | { status: 'pending'; requestId: string };  // new variant\n\n// handlers.ts\nfunction handleResponse<T>(res: ApiResponse<T>): T {\n  if (res.status === 'success') return res.data;\n  throw new Error(res.message);  // 'pending' has no message \u2014 TS error\n}",
+  "diff_summary": "Added 'pending' variant to ApiResponse discriminated union without updating switch/if-else handlers",
+  "ground_truth": {
+    "will_break": [
+      "handleResponse tries res.message on 'pending' type which has no message property \u2014 TS error; runtime: res.message is undefined, throws 'undefined' as error message"
+    ],
+    "edge_cases": [
+      "Any switch(res.status) without a 'pending' case \u2014 TypeScript exhaustiveness check fails or default branch handles pending incorrectly"
+    ],
+    "broken_pattern": "Adding a discriminated union variant requires updating all exhaustive handlers; error variant now has code field that handlers ignore",
+    "next_prompt": "TypeScript is complaining that 'pending' doesn't have a 'message' property",
+    "verified_by": "git_analogy",
+    "notes": "Discriminated union expansion is a well-known breaking change pattern"
+  },
+  "token_cost_manual_followup": 33
+}

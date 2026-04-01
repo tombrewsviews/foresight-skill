@@ -1,0 +1,22 @@
+{
+  "id": "case_C_005",
+  "stratum": "C",
+  "difficulty": "medium",
+  "language": "python",
+  "change_type": "refactor",
+  "description": "Extract normalize_phone drops country code handling",
+  "before_code": "# checkout.py\nimport re\n\ndef process_checkout(phone: str, amount: float):\n    cleaned = re.sub(r'[^\\d+]', '', phone)\n    if cleaned.startswith('+'):\n        cleaned = cleaned  # keep country code\n    elif len(cleaned) == 10:\n        cleaned = '+1' + cleaned  # assume US\n    # ... process payment\n    return {\"phone\": cleaned, \"amount\": amount}\n\n# profile.py\ndef save_phone(user_id: str, phone: str):\n    cleaned = re.sub(r'[^\\d]', '', phone)  # strips + too\n    if len(cleaned) == 10:\n        cleaned = '1' + cleaned\n    # ... save to db",
+  "after_code": "# phone_utils.py\nimport re\n\ndef normalize_phone(phone: str) -> str:\n    return re.sub(r'[^\\d]', '', phone)\n\n# checkout.py\nfrom phone_utils import normalize_phone\n\ndef process_checkout(phone: str, amount: float):\n    cleaned = normalize_phone(phone)\n    return {\"phone\": cleaned, \"amount\": amount}\n\n# profile.py\nfrom phone_utils import normalize_phone\n\ndef save_phone(user_id: str, phone: str):\n    cleaned = normalize_phone(phone)\n    # ... save to db",
+  "diff_summary": "Extracted normalize_phone utility but it strips the + prefix and drops country code defaulting logic",
+  "ground_truth": {
+    "will_break": [],
+    "edge_cases": [
+      "International numbers with + stripped \u2014 '+447911123456' becomes '447911123456'; checkout no longer defaults 10-digit numbers to US +1"
+    ],
+    "broken_pattern": "checkout.py had the better implementation (kept + prefix, defaulted to +1); profile.py had the weaker one; refactor standardized on the weaker version",
+    "next_prompt": "International phone numbers are being stored without the country code",
+    "verified_by": "git_analogy",
+    "notes": "Refactor unified to the wrong (weaker) implementation"
+  },
+  "token_cost_manual_followup": 32
+}
