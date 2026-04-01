@@ -5,7 +5,8 @@
       "Bash(python3:*)",
       "Bash(claude skill:*)",
       "Bash(pip3 --version)",
-      "Bash(pip3 install:*)"
+      "Bash(pip3 install:*)",
+      "Bash(git remote:*)"
     ]
   }
 }
