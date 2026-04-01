@@ -1,0 +1,9 @@
+{
+  "version": "1.0.0",
+  "organization": "tombrewsviews",
+  "date": "April 2026",
+  "abstract": "Post-implementation lookahead skill for AI coding agents. After any code change, Foresight produces a compact structured block (max 120 words) surfacing imminent breakage, edge cases, security issues, broken patterns, and a prediction of the user's next prompt — before the user discovers the problem themselves. Benchmarked across 60 test cases (5 strata, 3 difficulty levels): 100% ground truth hit rate vs. 32% baseline, with a net token saving of +42 words per case by eliminating follow-up round-trips.",
+  "references": [
+    "https://github.com/tombrewsviews/foresight-skill"
+  ]
+}

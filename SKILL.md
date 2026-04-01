@@ -2,6 +2,10 @@
 name: foresight
 description: >
   Post-implementation lookahead skill. Trigger automatically at the END of any implementation turn — after writing code, modifying files, refactoring, adding features, fixing bugs, or making architectural changes. This skill makes the agent reason one turn ahead: what will break, what edge cases were introduced, what security holes were opened, what patterns are now inconsistent, and what the next human prompt will likely expose as a problem. Use this skill whenever the agent has just shipped a change and is about to respond to the user. It produces a compact, structured FORESIGHT block — never a wall of text. The goal is to surface future breakage *now*, before the next turn, using fewer tokens than the user would spend prompting for it manually. Use this even for small changes — a one-line type change can break ten callers. A one-line config change can expose an entire API.
+license: MIT
+metadata:
+  author: tombrewsviews
+  version: "1.0.0"
 ---
 
 # Foresight — Post-Implementation Lookahead
